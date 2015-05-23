@@ -4,11 +4,30 @@
         <meta charset="utf-8" />
         <title>Y86 Simulator</title>
         <link rel="stylesheet" type="text/css" href="./css/simulator.css" />
+        <script language="javascript" src="./js/jquery.min.js"></script>
+        <script language="javascript" src="./js/jquery-bganimate.min.js"></script>
         <script language="javascript" src="./js/constants.js"></script>
+        <script language="javascript" src="./js/utils.js"></script>
+        <script language="javascript" src="./js/memory.js"></script>
+        <script language="javascript" src="./js/registers.js"></script>
+        <script language="javascript" src="./js/kernel.js"></script>
+        <script language="javascript" src="./js/controller.js"></script>
     </head>
 
     <body>
-        <div id="container" class="container">
+        <div id="drop_area" class="drop_area"></div>
+
+        <div id="controller" class="header">
+            <img src="./img/prev.png" id="prev">
+            <img src="./img/pause.png" id="pause">
+            <img src="./img/start.png" id="start">
+            <img src="./img/next.png" id="next">
+            <img src="./img/reset.png" id="reset">
+            Frequency: <input type="text" maxlength="3" placeholder="in Hz" id="freq" size="5" value="50" /> Hz
+            <input type="text" maxlength="10" placeholder="Mem Address" id="memaddr" size="15" />
+        </div>
+
+        <div id="stages" class="container">
             <div id="fetch" class="stage fetch">
                 <div id="fetch_title" class="stage_title">Fetch</div>
                 <div class="entry_block">
@@ -17,7 +36,7 @@
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">CPU STAT</div>
-                    <div class="entry_content" id="stat">STAT_AOK</div>
+                    <div class="entry_content" id="stat">S_AOK</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">CPU Cycles</div>
@@ -36,7 +55,7 @@
                 <div id="decode_title" class="stage_title">Decode</div>
                 <div class="entry_block">
                     <div class="entry_title">stat</div>
-                    <div class="entry_content" id="D_stat">STAT_AOK</div>
+                    <div class="entry_content" id="D_stat">S_AOK</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">icode</div>
@@ -67,7 +86,7 @@
                 <div id="execute_title" class="stage_title">Execute</div>
                 <div class="entry_block">
                     <div class="entry_title">stat</div>
-                    <div class="entry_content" id="E_stat">STAT_AOK</div>
+                    <div class="entry_content" id="E_stat">S_AOK</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">icode</div>
@@ -78,16 +97,16 @@
                     <div class="entry_content" id="E_ifun">0</div>
                 </div>
                 <div class="entry_block">
-                    <div class="entry_title">valC</div>
-                    <div class="entry_content" id="E_valC">0x00000000</div>
-                </div>
-                <div class="entry_block">
                     <div class="entry_title">valA</div>
                     <div class="entry_content" id="E_valA">0x00000000</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">valB</div>
                     <div class="entry_content" id="E_valB">0x00000000</div>
+                </div>
+                <div class="entry_block">
+                    <div class="entry_title">valC</div>
+                    <div class="entry_content" id="E_valC">0x00000000</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">dstE</div>
@@ -110,7 +129,7 @@
                 <div id="memory_title" class="stage_title">Memory</div>
                 <div class="entry_block">
                     <div class="entry_title">stat</div>
-                    <div class="entry_content" id="M_stat">STAT_AOK</div>
+                    <div class="entry_content" id="M_stat">S_AOK</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">icode</div>
@@ -141,7 +160,7 @@
                 <div id="writeback_title" class="stage_title">Write back</div>
                 <div class="entry_block">
                     <div class="entry_title">stat</div>
-                    <div class="entry_content" id="W_stat">STAT_AOK</div>
+                    <div class="entry_content" id="W_stat">S_AOK</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">icode</div>
@@ -200,5 +219,129 @@
                 </div>
             </div>
         </div>
+
+        <script language="javascript">
+            var pre =$('#drop_area').html();
+            console.log(pre);
+
+            function _updateMem() {
+                var num = parseInt($('#memaddr').val());
+                if(isNaN(num)) num = parseInt($('#memaddr').val(), 16);
+                if(isNaN(num)) { $('#mem_VAL').html('Invalid Addr'); return ; }
+                $('#mem_VAL').html(toHexString(VM.Memory.readUnsigned(num)));
+            }
+
+            $('#memaddr').change(function() {
+                _updateMem();
+            });
+            $('#prev').click(function() {
+                lastStep();
+            });
+            $('#next').click(function() {
+                nextStep();
+            });
+            $('#start').click(function() {
+                startTimer($('#freq').val());
+            });
+            $('#pause').click(function() {
+                stopTimer();
+            });
+            $('#reset').click(function() {
+                YOReload(true);
+            })
+            $(document).keydown(function(e) {
+                if(e.keyCode == 37) lastStep(); // Left
+                else if(e.keyCode == 39) nextStep(); // Right
+                else if(e.keyCode == 67) $('#freq').focus(); // C
+                else if(e.keyCode == 77) $('#memaddr').focus(); // C
+                else if(e.keyCode == 82) startTimer($('#freq').val()); // R
+                else if(e.keyCode == 83) YOReload(true); // S
+                else if(e.keyCode == 84) stopTimer(); // T
+                else return;
+                e.preventDefault();
+            }).keyup(function(e) {	_updateMem(); });
+            $('html body').on(
+                    'dragover',
+                    function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+            ).on(
+                    'dragenter',
+                    function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        pre = $('#drop_area').html();
+                        $('#drop_area').html("Drop to load :)");
+                    }
+            ).on(
+                    'dragleave',
+                    function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $('#drop_area').html(pre);
+                    }
+            ).on(
+                    'drop',
+                    function(e) {
+                        if(e.originalEvent.dataTransfer) {
+                            if(e.originalEvent.dataTransfer.files.length) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                var files = e.originalEvent.dataTransfer.files; // FileList object
+                                var fHandle = files[0];
+
+                                var reader = new FileReader();
+
+                                reader.onloadend = function(event) {
+                                    if(event.target.readyState == FileReader.DONE)
+                                        YOLoader(event.target.result, fHandle.name);
+                                };
+
+                                reader.readAsText(fHandle);
+                            }
+                        }
+                    }
+            );
+
+            function nextStep() {
+                if(!YOLoaded) return YOReload();
+                try {
+                    VM.CPU.notify();
+                } catch (e) {
+                    window.alert("VM was terminated by signal " + getStatName(e));
+                    return false;
+                }
+                updateDisplay(VM.CPU.getInput());
+                return true;
+            }
+
+            function lastStep() {
+                if(!YOLoaded) return YOReload();
+                var lastCycle = VM.CPU.cycle() - 1;
+                if(lastCycle < 0) return;
+                YOReload();
+                doStep(lastCycle);
+            }
+
+            function doStep(cycleNum) {
+                for(var i = 0; i < cycleNum; ++ i) VM.CPU.notify();
+                updateDisplay(VM.CPU.getInput());
+            }
+
+            window.startTimer = function(freq) {
+                freq = parseFloat(freq);
+                if(freq < 1e-8) alert("Invalid frequency!");
+                if(freq > 999) alert("Too fast!");
+                var delay = Math.round(1000 / freq);
+                if(window.clockTimer) window.clearInterval(window.clockTimer);
+                window.clockTimer = window.setInterval(function(){ if(!nextStep()) stopTimer();}, delay);
+            }
+
+            window.stopTimer = function() {
+                if(window.clockTimer) window.clearInterval(window.clockTimer);
+                window.clockTimer = undefined;
+            }
+        </script>
     </body>
 </html>

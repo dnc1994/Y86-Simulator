@@ -1,6 +1,24 @@
 html, body {
+    background-color: lightseagreen;
 	width: 1200px;
 	margin: 0 auto;
+}
+
+.drop_area {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+}
+
+.header {
+    height: 60px;
+    line-height: 60px;
+    width: 100%;
+    text-align: center;
 }
 
 .container {
@@ -9,14 +27,14 @@ html, body {
 	border-top: 0;
 }
 
-.blocks {
+.stage {
 	height: 500px;
 	width: 180px;
 	float: left;
     display: inline-block;
 }
 
-.inner_title {
+.stage_title {
 	font-weight: bold;
 	font-size: 24px;
 	color: red;
@@ -27,7 +45,7 @@ html, body {
 	margin-bottom: 5px;
 }
 
-.show_block {
+.entry_block {
 	width: 100%;
 	height: 40px;
 	display: block;
