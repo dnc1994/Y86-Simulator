@@ -62,9 +62,10 @@
         var readAble = function(elemID, transfer) {
             $('#' + elemID).html(transfer($('#' + elemID).html()));
         };
-        $('#stat').html(VM.CPU.stat());
-        $('#instruction').html(VM.CPU.instruction());
-        $('#cycle').html(VM.CPU.cycle());
+        $('#stat').html(VM.CPU.getStat());
+        $('#instruction').html(VM.CPU.getInstruction());
+        $('#cycle').html(VM.CPU.getCycle());
+        $('#CPI').html(VM.CPU.getCPI());
         readAble('D_stat', getStatName);
         readAble('E_stat', getStatName);
         readAble('M_stat', getStatName);
@@ -94,7 +95,9 @@
         readAble('M_valE', toHexString);
         readAble('W_valE', toHexString);
         readAble('W_valM', toHexString);
-        for(var i = 0; i < 8; ++ i) {
+        $('#ZF').html(VM.CPU.getZF());
+
+        for (var i = 0; i < 8; ++ i) {
             var $Node = $('#' + getRegisterName(i));
             var pre = $Node.html();
             $Node.html(VM.R[getRegisterName(i)]);

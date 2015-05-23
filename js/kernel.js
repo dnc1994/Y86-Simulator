@@ -12,12 +12,14 @@
     var ALU = function() {
         var inputA = 0, inputB = 0, Fcode = 0, needUpCC = 0;
         var tVal = 0;
-        var CC = 4; // ZF = 1
+        var CC = 0; // ZF = 1
 
         // 第 0 位表示 OF, 第 1 位表示 SF, 第 2 位表示 ZF
         // 注意先将对应的位置为 0
         var setZF = function(flag) {
+            //console.log('setting ZF', CC);
             CC = (CC & 3) | ((!!flag) << 2);
+            //console.log('ZF set', CC);
         };
 
         var setSF = function(flag) {
@@ -39,6 +41,8 @@
         var getOF = function() {
             return !!(CC & 1);
         };
+
+        this.getZF = getZF;
 
         var Calc = {};
 
@@ -112,10 +116,6 @@
             return !((getSF() ^ getOF()) | getZF());
         };
 
-
-
-
-
         this.setInputA = function (val) {
             assert(isInt(val));
             inputA = val;
@@ -153,11 +153,11 @@
             catch (e) {
                 return true;
             }
-            console.log(getZF());
+            /*console.log(getZF());
             console.log(getSF());
             console.log(getOF());
             console.log(code);
-            console.log(Cond[code]());
+            console.log(Cond[code]());*/
             return Cond[code]();
         };
     };
@@ -168,15 +168,11 @@
         var hlt_flg = false;
         var stat = CONST.S_AOK;
 
+        // 统计频率用于计算CPI和进行性能分析
         var cycle = 0, instruction = 0;
-
-        this.stat = function () {
-            return stat;
-        };
-
-        this.cycle = function () {
-            return cycle;
-        };
+        var count_mrmovl = 0, count_popl = 0, count_load_use = 0;
+        var count_cond_branch = 0, count_mispredict = 0;
+        var count_ret = 0;
 
         window.alu = new ALU();
 
@@ -193,7 +189,6 @@
             var byte0 = VM.M.readByte(nextPC++);
             output.D_icode = byte0 >> 4;
             output.D_ifun = byte0 & 15;
-
 
             // 检查是否为非法指令
             if ([CONST.I_NOP, CONST.I_HALT, CONST.I_RRMOVL, CONST.I_IRMOVL, CONST.I_RMMOVL,
@@ -304,6 +299,11 @@
             output.M_dstM = input.E_dstM;
             output.M_stat = input.E_stat;
 
+            if (input.E_icode == CONST.I_MRMOVL) ++ count_mrmovl;
+            if (input.E_icode == CONST.I_POPL) ++ count_popl;
+            if (input.E_icode == CONST.I_JXX) ++ count_cond_branch;
+            //if (input.E_icode == CONST.I_RET) ++ count_ret;
+
             // alu.inputA
             if (input.E_icode == CONST.I_HALT && input.E_stat != CONST.S_BUB) {
                 hlt_flg = true;
@@ -331,7 +331,7 @@
             else alu.setFcode(0);
 
             // alu.setCC
-            if ([CONST.I_OPL, CONST.I_IADDL].indexOf(input.E_icode) != -1
+            if ([CONST.I_OPL].indexOf(input.E_icode) != -1
                 && [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(output.W_stat) == -1
                 && [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(input.W_stat) == -1)
                 alu.setNeedUpCC(true);
@@ -339,6 +339,7 @@
                 alu.setNeedUpCC(false);
 
             output.M_valE = alu.run();
+            //output.M_Cnd = input.E_icode != CONST.I_JXX ? 0 : alu.getCnd(input.E_ifun);
             output.M_Cnd = alu.getCnd(input.E_ifun);
             output.M_valA = input.E_valA;
             if (input.E_icode == CONST.I_RRMOVL && !output.M_Cnd)
@@ -365,7 +366,6 @@
             memRead = [CONST.I_MRMOVL, CONST.I_POPL, CONST.I_RET].indexOf(input.M_icode) != -1;
             memWrite = [CONST.I_RMMOVL, CONST.I_PUSHL, CONST.I_CALL].indexOf(input.M_icode) != -1;
 
-            // output.W_valM
             if (memRead) output.W_valM = VM.M.readInt(memAddr);
             if (memWrite)
                 try {
@@ -397,18 +397,25 @@
                 || ((!D_stall) && ([input.D_icode, input.E_icode, input.M_icode].indexOf(CONST.I_RET) != -1));
 
             var E_bubble = (input.E_icode == CONST.I_JXX && !output.M_Cnd)
-                || (([CONST.I_MRMOVL, CONST.I_POPL, CONST.I_LEAVE].indexOf(input.E_icode) != -1
+                || (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1
                 && [output.E_srcA, output.E_srcB].indexOf(input.E_dstM) != -1));
 
             var M_bubble = [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(output.W_stat) != -1
                 || [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(input.W_stat) != -1;
+
+            if (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1) &&
+                (input.E_dstM == input.E_srcA || input.E_dstM == input.E_srcB)) ++ count_load_use;
+
+            if (input.E_icode = CONST.I_JXX && !input.M_Cnd) ++ count_mispredict;
+
+            if ([input.D_icode, input.E_icode, input.M_icode].indexOf(CONST.I_RET) != -1) ++ count_ret;
 
             // Then write Regs from input to output.
 
             var tmpIn = new PipelineRegisters(output);
 
             // Memory bubble
-            if(M_bubble) {
+            if (M_bubble) {
                 tmpIn.M_icode = CONST.I_NOP;
                 tmpIn.M_stat = CONST.S_BUB;
                 tmpIn.M_dstE = tmpIn.M_dstM = CONST.R_NONE;
@@ -416,14 +423,14 @@
             }
 
             // Execute bubble
-            if(E_bubble) {
+            if (E_bubble) {
                 tmpIn.E_icode = CONST.I_NOP; tmpIn.E_ifun = 0;
                 tmpIn.E_stat = CONST.S_BUB;
                 tmpIn.E_dstE = tmpIn.E_dstM = tmpIn.E_srcA = tmpIn.E_srcB = CONST.R_NONE;
             }
 
             // Decode stall
-            if(D_stall) {
+            if (D_stall) {
                 tmpIn.D_icode = input.D_icode;
                 tmpIn.D_ifun = input.D_ifun;
                 tmpIn.D_rA = input.D_rA;
@@ -433,23 +440,23 @@
             }
 
             // Decode bubble
-            if(D_bubble) {
+            if (D_bubble) {
                 tmpIn.D_icode = CONST.I_NOP; tmpIn.D_ifun = 0;
                 tmpIn.D_stat = CONST.S_BUB;
             }
 
             // Fetch stall
-            if(F_stall) {
+            if (F_stall) {
                 tmpIn.F_predPC = input.F_predPC;
             }
 
             input = tmpIn;
         };
 
-        this.notify = function() { // Generate a clock tick.
-            if (input.W_icode == CONST.I_HALT) stat = CONST.STAT_HLT;
+        // 产生一个时钟上升沿
+        this.tick = function() {
+            if (input.W_icode == CONST.I_HALT) stat = CONST.S_HLT;
             if (stat != CONST.S_AOK && stat != CONST.S_BUB) throw stat;
-            // Temp Regs now write value into the target.
 
             write_back();
             memory();
@@ -458,16 +465,52 @@
             fetch();
             ++ cycle;
             if(stat != CONST.S_BUB) ++ instruction;
-
             pipeline_logic();
         };
+
+        this.getStat = function () {
+            return stat;
+        };
+
+        this.getCycle = function () {
+            return cycle;
+        };
+
+        this.getInstruction = function() {
+            return instruction;
+        };
+
+        this.getCPI = function() {
+            var ins_freq = {
+                lp : !instruction ? 0: (count_mrmovl + count_popl) / instruction,
+                mp : !instruction ? 0: count_cond_branch / instruction,
+                rp : !instruction ? 0: count_ret / instruction
+            };
+
+            var cond_freq = {
+                lp : !(count_mrmovl + count_popl) ? 0 : count_load_use / (count_mrmovl + count_popl),
+                mp : !count_cond_branch ? 0 : count_mispredict / count_cond_branch,
+                rp : 1
+            };
+
+            var lp = ins_freq["lp"] * cond_freq["lp"];
+            var mp = ins_freq["mp"] * cond_freq["mp"] * 2;
+            var rp = ins_freq["rp"] * cond_freq["rp"] * 3;
+
+            /*console.log(ins_freq);
+            console.log(cond_freq);
+            console.log(1.0 + lp + mp + rp);*/
+
+            return (1.0 + lp + mp + rp).toFixed(3);
+        };
+
+        this.getZF = function() {
+            console.log(alu.getZF())
+            return alu.getZF();
+        }
 
         this.getInput = function() {
             return input;
         };
-
-        this.instruction = function() {
-            return instruction;
-        }
     }
 })();

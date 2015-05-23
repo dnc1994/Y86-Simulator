@@ -27,16 +27,16 @@ html, body {
 	border-top: 0;
 }
 
-.stage {
+.block {
 	height: 500px;
-	width: 180px;
+	width: 140px;
 	float: left;
     display: inline-block;
 }
 
-.stage_title {
+.block_title {
 	font-weight: bold;
-	font-size: 24px;
+	font-size: 20px;
 	color: red;
 	width: 100%;
 	height: 32px;
@@ -53,22 +53,22 @@ html, body {
 	border-color: red;
 	text-align: center;
 	font-weight: bold;
-	margin-top: 5px;
+	margin-top: 2px;
 }
 
 .entry_title {
 	width: 100%;
-	height: 20px;
-	line-height: 20px;
-	font-size: 20px;
+	height: 16px;
+	line-height: 16px;
+	font-size: 16px;
 	color: black;
 }
 
 .entry_content {
 	width: 100%;
-	height: 20px;
-	line-height: 20px;
-	font-size: 20px;
+	height: 16px;
+	line-height: 16px;
+	font-size: 16px;
 	color: blue;
 	font-family: "Courier New", monospace;
 }
