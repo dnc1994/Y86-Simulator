@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Y86 Simulator</title>
+        <link rel="stylesheet" type="text/css" href="./css/simulator.css" />
+        <script language="javascript" src="./js/constants.js"></script>
+    </head>
+
+    <body>
+        <div id="container" class="container">
+            <div id="fetch" class="blocks fetch">
+                <div id="fetch_title" class="inner_title">Fetch</div>
+                <div class="show_block">
+                    <div class="show_block_title">predPC</div>
+                    <div class="show_block_content" id="F_predPC">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">CPU STAT</div>
+                    <div class="show_block_content" id="stat">STAT_AOK</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">CPU Cycles</div>
+                    <div class="show_block_content" id="cycle">0</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">Insturctions</div>
+                    <div class="show_block_content" id="instruction">0</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">mem_VAL</div>
+                    <div class="show_block_content" id="mem_VAL">0x00000000</div>
+                </div>
+            </div>
+            <div id="decode" class="blocks decode">
+                <div id="decode_title" class="inner_title">Decode</div>
+                <div class="show_block">
+                    <div class="show_block_title">stat</div>
+                    <div class="show_block_content" id="D_stat">STAT_AOK</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">icode</div>
+                    <div class="show_block_content" id="D_icode">I_NOP</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">ifun</div>
+                    <div class="show_block_content" id="D_ifun">0</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">rA</div>
+                    <div class="show_block_content" id="D_rA">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">rB</div>
+                    <div class="show_block_content" id="D_rB">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valC</div>
+                    <div class="show_block_content" id="D_valC">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valP</div>
+                    <div class="show_block_content" id="D_valP">0x00000000</div>
+                </div>
+            </div>
+            <div id="execute" class="blocks execute">
+                <div id="execute_title" class="inner_title">Execute</div>
+                <div class="show_block">
+                    <div class="show_block_title">stat</div>
+                    <div class="show_block_content" id="E_stat">STAT_AOK</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">icode</div>
+                    <div class="show_block_content" id="E_icode">I_NOP</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">ifun</div>
+                    <div class="show_block_content" id="E_ifun">0</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valC</div>
+                    <div class="show_block_content" id="E_valC">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valA</div>
+                    <div class="show_block_content" id="E_valA">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valB</div>
+                    <div class="show_block_content" id="E_valB">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">dstE</div>
+                    <div class="show_block_content" id="E_dstE">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">dstM</div>
+                    <div class="show_block_content" id="E_dstM">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">srcA</div>
+                    <div class="show_block_content" id="E_srcA">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">srcB</div>
+                    <div class="show_block_content" id="E_srcB">R_NONE</div>
+                </div>
+            </div>
+            <div id="memory" class="blocks memory">
+                <div id="memory_title" class="inner_title">Memory</div>
+                <div class="show_block">
+                    <div class="show_block_title">stat</div>
+                    <div class="show_block_content" id="M_stat">STAT_AOK</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">icode</div>
+                    <div class="show_block_content" id="M_icode">I_NOP</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">Cnd</div>
+                    <div class="show_block_content" id="M_Cnd">false</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valE</div>
+                    <div class="show_block_content" id="M_valE">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valA</div>
+                    <div class="show_block_content" id="M_valA">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">dstE</div>
+                    <div class="show_block_content" id="M_dstE">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">dstM</div>
+                    <div class="show_block_content" id="M_dstM">R_NONE</div>
+                </div>
+            </div>
+            <div id="writeback" class="blocks write_back">
+                <div id="writeback_title" class="inner_title">Write back</div>
+                <div class="show_block">
+                    <div class="show_block_title">stat</div>
+                    <div class="show_block_content" id="W_stat">STAT_AOK</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">icode</div>
+                    <div class="show_block_content" id="W_icode">I_NOP</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valE</div>
+                    <div class="show_block_content" id="W_valE">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">valM</div>
+                    <div class="show_block_content" id="W_valM">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">dstE</div>
+                    <div class="show_block_content" id="W_dstE">R_NONE</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">dstM</div>
+                    <div class="show_block_content" id="W_dstM">R_NONE</div>
+                </div>
+            </div>
+            <div id="monitor" class="blocks monitor">
+                <div id="monitor_title" class="inner_title">Registers</div>
+                <div class="show_block">
+                    <div class="show_block_title">R_EAX</div>
+                    <div class="show_block_content" id="R_EAX">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_ECX</div>
+                    <div class="show_block_content" id="R_ECX">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_EDX</div>
+                    <div class="show_block_content" id="R_EDX">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_EBX</div>
+                    <div class="show_block_content" id="R_EBX">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_ESP</div>
+                    <div class="show_block_content" id="R_ESP">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_EBP</div>
+                    <div class="show_block_content" id="R_EBP">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_ESI</div>
+                    <div class="show_block_content" id="R_ESI">0x00000000</div>
+                </div>
+                <div class="show_block">
+                    <div class="show_block_title">R_EDI</div>
+                    <div class="show_block_content" id="R_EDI">0x00000000</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

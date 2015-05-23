@@ -1,0 +1,42 @@
+.container {
+	height: 500px;
+	width: 100%;
+	border-top: 0;
+}
+
+.blocks {
+	height: 500px;
+	width: 167px;
+	margin: 0;
+	padding: 0;
+	float: left;
+	display: inline-block;
+}
+
+.show_block {
+	width: 100%;
+	height: 40px;
+	display: block;
+	border: 0 2px dashed;
+	border-color: red;
+	text-align: center;
+	font-weight: bold;
+	margin-top: 5px;
+}
+
+.show_block_title {
+	width: 100%;
+	height: 20px;
+	line-height: 20px;
+	font-size: 20px;
+	color: black;
+}
+
+.show_block_content {
+	width: 100%;
+	height: 20px;
+	line-height: 20px;
+	font-size: 20px;
+	color: darkgreen;
+	font-family: "Courier New", monospace;
+}
