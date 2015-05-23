@@ -20,8 +20,8 @@
         I_JXX : 7,
         I_CALL : 8,
         I_RET : 9,
-        I_PUSHL : 0xA,
-        I_POPL : 0xB,
+        I_PUSHL : 11,
+        I_POPL : 12,
         I_IADDL : 12,
         I_LEAVE : 13,
 
@@ -31,17 +31,17 @@
         A_XOR : 3,
         A_NONE : 4,
 
-        F_OF : 1, // OF at bit 0
-        F_SF : 2, // SF at bit 1
-        F_ZF : 4, // ZF at bit 2
+        F_OF : 1, // 第0位表示OF
+        F_SF : 2, // 第1位表示SF
+        F_ZF : 4, // 第2位表示ZF
 
         C_TRUE : 0,
-        C_LE : 1,
-        C_L : 2,
-        C_E : 3,
-        C_NE : 4,
-        C_GE : 5,
-        C_G : 6,
+        C_E : 1,
+        C_NE : 2,
+        C_G : 3,
+        C_GE : 4,
+        C_L : 5,
+        C_LE : 6,
 
         S_BUB : 0,
         S_AOK : 1,
@@ -83,4 +83,4 @@
         return ['R_EAX', 'R_ECX', 'R_EDX', 'R_EBX', 'R_ESP', 'R_EBP', 'R_ESI', 'R_EDI'][id];
     };
 }
-)()
+)();
