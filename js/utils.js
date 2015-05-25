@@ -1,5 +1,5 @@
 /*
- * File: constants.js
+ * File: utils.js
  * Author: Zhang Linghao <zlhdnc1994gmail.com>
  */
 
