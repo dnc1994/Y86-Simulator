@@ -56,9 +56,7 @@
         R_EBP : 5,
         R_ESI : 6,
         R_EDI : 7,
-        R_NONE : 0xF,
-
-        DEF_CC : 4 //0b100
+        R_NONE : 8
     };
 
     window.getStatName = function(id) {
@@ -76,8 +74,8 @@
 
     window.getRegisterName = function(id) {
         id = parseInt(id);
-        if (id == 0xF) return 'R_NONE';
-        if (id < 0 || id > 7) return null;
+        if (id == 8) return 'R_NONE';
+        if (id < 0 || id > 8) return null;
         return ['R_EAX', 'R_ECX', 'R_EDX', 'R_EBX', 'R_ESP', 'R_EBP', 'R_ESI', 'R_EDI'][id];
     };
 

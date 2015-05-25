@@ -12,14 +12,14 @@
     var ALU = function() {
         var inputA = 0, inputB = 0, Fcode = 0, needUpCC = 0;
         var tVal = 0;
-        var CC = 0; // ZF = 1
+        var CC = 4; // ZF = 1
 
         // 第 0 位表示 OF, 第 1 位表示 SF, 第 2 位表示 ZF
         // 注意先将对应的位置为 0
         var setZF = function(flag) {
-            //console.log('setting ZF', CC);
+            //console.log('setting ZF', flag);
             CC = (CC & 3) | ((!!flag) << 2);
-            //console.log('ZF set', CC);
+            //console.log('ZF set', getZF());
         };
 
         var setSF = function(flag) {
@@ -43,6 +43,8 @@
         };
 
         this.getZF = getZF;
+        this.getSF = getSF;
+        this.getOF = getOF;
 
         var Calc = {};
 
@@ -153,22 +155,18 @@
             catch (e) {
                 return true;
             }
-            /*console.log(getZF());
-            console.log(getSF());
-            console.log(getOF());
-            console.log(code);
-            console.log(Cond[code]());*/
             return Cond[code]();
         };
     };
 
     window.CPU = function() {
+        // input 表示当前周期始的流水线寄存器状态
+        // output 表示当前周期末的流水线寄存器状态
         var input = new window.PipelineRegisters();
         var output = new window.PipelineRegisters();
-        var hlt_flg = false;
-        var stat = CONST.S_AOK;
+        var hlt_flag = false, stat = CONST.S_AOK;
 
-        // 统计频率用于计算CPI和进行性能分析
+        // 统计指令的出现频率用于计算CPI和进行性能分析
         var cycle = 0, instruction = 0;
         var count_mrmovl = 0, count_popl = 0, count_load_use = 0;
         var count_cond_branch = 0, count_mispredict = 0;
@@ -177,16 +175,16 @@
         window.alu = new ALU();
 
         var fetch = function () {
-            if (hlt_flg) return;
+            if (hlt_flag) return;
 
             nextPC = input.F_predPC;
-            if (input.M_icode == CONST.I_JXX && !input.M_Cnd)
+            if (input.M_icode == CONST.I_JXX && !input.M_Bch)
                 nextPC = input.M_valA;
             else if (input.W_icode == CONST.I_RET)
                 nextPC = input.W_valM;
 
             // 抽取 icode, ifun
-            var byte0 = VM.M.readByte(nextPC++);
+            var byte0 = VM.M.readByte(nextPC ++);
             output.D_icode = byte0 >> 4;
             output.D_ifun = byte0 & 15;
 
@@ -204,13 +202,13 @@
                 return;
             }
 
-            // 正常状态
+            // 正常
             output.F_stat = output.D_stat = CONST.S_AOK;
 
             // 抽取 rA, rB
             if ([CONST.I_RRMOVL, CONST.I_OPL, CONST.I_IRMOVL, CONST.I_MRMOVL,
                 CONST.I_RMMOVL, CONST.I_PUSHL, CONST.I_POPL].indexOf(output.D_icode) != -1) {
-                var regByte = VM.M.readByte(nextPC++);
+                var regByte = VM.M.readByte(nextPC ++);
                 output.D_rA = regByte >> 4;
                 output.D_rB = regByte & 0xF;
             }
@@ -243,26 +241,30 @@
                 output.E_srcA = input.D_rA;
             else if ([CONST.I_POPL, CONST.I_RET].indexOf(input.D_icode) != -1)
                 output.E_srcA = CONST.R_ESP;
-            else output.E_srcA = CONST.R_NONE;
+            else
+                output.E_srcA = CONST.R_NONE;
 
             // output.E_srcB
             if ([CONST.I_OPL, CONST.I_RMMOVL, CONST.I_MRMOVL].indexOf(input.D_icode) != -1)
                 output.E_srcB = input.D_rB;
             else if ([CONST.I_PUSHL, CONST.I_POPL, CONST.I_CALL, CONST.I_RET].indexOf(input.D_icode) != -1)
                 output.E_srcB = CONST.R_ESP;
-            else output.E_srcB = CONST.R_NONE;
+            else
+                output.E_srcB = CONST.R_NONE;
 
             // output.E_dstE
             if ([CONST.I_RRMOVL, CONST.I_IRMOVL, CONST.I_OPL].indexOf(input.D_icode) != -1)
                 output.E_dstE = input.D_rB;
             else if ([CONST.I_PUSHL, CONST.I_POPL, CONST.I_CALL, CONST.I_RET].indexOf(input.D_icode) != -1)
                 output.E_dstE = CONST.R_ESP;
-            else output.E_dstE = CONST.R_NONE;
+            else
+                output.E_dstE = CONST.R_NONE;
 
             // output.E_dstM
             if ([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.D_icode) != -1)
                 output.E_dstM = input.D_rA;
-            else output.E_dstM = CONST.R_NONE;
+            else
+                output.E_dstM = CONST.R_NONE;
 
             // output.E_valA
             if ([CONST.I_CALL, CONST.I_JXX].indexOf(input.D_icode) != -1)
@@ -277,7 +279,8 @@
                 output.E_valA = input.W_valM;
             else if (output.E_srcA == input.W_dstE)
                 output.E_valA = input.W_valE;
-            else output.E_valA = VM.R.get(output.E_srcA);
+            else
+                output.E_valA = VM.R.get(output.E_srcA);
 
             // output.E_valB
             if (output.E_srcB == output.M_dstE)
@@ -290,7 +293,8 @@
                 output.E_valB = input.W_valM;
             else if (output.E_srcB == input.W_dstE)
                 output.E_valB = input.W_valE;
-            else output.E_valB = VM.R.get(output.E_srcB);
+            else
+                output.E_valB = VM.R.get(output.E_srcB);
         };
 
         var execute = function () {
@@ -306,7 +310,7 @@
 
             // alu.inputA
             if (input.E_icode == CONST.I_HALT && input.E_stat != CONST.S_BUB) {
-                hlt_flg = true;
+                hlt_flag = true;
                 output.M_stat = CONST.S_HLT;
             }
             if ([CONST.I_RRMOVL, CONST.I_OPL].indexOf(input.E_icode) != -1)
@@ -339,10 +343,11 @@
                 alu.setNeedUpCC(false);
 
             output.M_valE = alu.run();
-            //output.M_Cnd = input.E_icode != CONST.I_JXX ? 0 : alu.getCnd(input.E_ifun);
-            output.M_Cnd = alu.getCnd(input.E_ifun);
+            // E_icode != CONST.I_JXX 时 M_Bch 的值不影响流水线
+            //output.M_Bch = input.E_icode != CONST.I_JXX ? 0 : alu.getCnd(input.E_ifun);
+            output.M_Bch = alu.getCnd(input.E_ifun);
             output.M_valA = input.E_valA;
-            if (input.E_icode == CONST.I_RRMOVL && !output.M_Cnd)
+            if (input.E_icode == CONST.I_RRMOVL && !output.M_Bch)
                 output.M_dstE = CONST.R_NONE;
             else output.M_dstE = input.E_dstE;
         };
@@ -372,7 +377,7 @@
                     VM.M.writeInt(memAddr, input.M_valA);
                 }
                 catch (e) {
-                    // 非法内存地址
+                    // 内存地址非法
                     output.W_stat = CONST.S_ADR;
                 }
         };
@@ -385,7 +390,7 @@
         };
 
         // 流水线控制逻辑的实现
-        var pipeline_logic = function() {
+        var pipeline_control_logic = function() {
             var F_stall = (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1)
                 && ([output.E_srcA, output.E_srcB].indexOf(input.E_dstM) != -1))
                 || ([input.D_icode, input.E_icode, input.M_icode].indexOf(CONST.I_RET) != -1);
@@ -393,10 +398,10 @@
             var D_stall = ([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1)
                 && ([output.E_srcA, output.E_srcB].indexOf(input.E_dstM) != -1);
 
-            var D_bubble = (input.E_icode == CONST.I_JXX && !output.M_Cnd)
+            var D_bubble = (input.E_icode == CONST.I_JXX && !output.M_Bch)
                 || ((!D_stall) && ([input.D_icode, input.E_icode, input.M_icode].indexOf(CONST.I_RET) != -1));
 
-            var E_bubble = (input.E_icode == CONST.I_JXX && !output.M_Cnd)
+            var E_bubble = (input.E_icode == CONST.I_JXX && !output.M_Bch)
                 || (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1
                 && [output.E_srcA, output.E_srcB].indexOf(input.E_dstM) != -1));
 
@@ -406,51 +411,51 @@
             if (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1) &&
                 (input.E_dstM == input.E_srcA || input.E_dstM == input.E_srcB)) ++ count_load_use;
 
-            if (input.E_icode = CONST.I_JXX && !input.M_Cnd) ++ count_mispredict;
+            if (input.E_icode = CONST.I_JXX && !input.M_Bch) ++ count_mispredict;
 
             if ([input.D_icode, input.E_icode, input.M_icode].indexOf(CONST.I_RET) != -1) ++ count_ret;
 
             // Then write Regs from input to output.
 
-            var tmpIn = new PipelineRegisters(output);
+            var newInput = new PipelineRegisters(output);
 
             // Memory bubble
             if (M_bubble) {
-                tmpIn.M_icode = CONST.I_NOP;
-                tmpIn.M_stat = CONST.S_BUB;
-                tmpIn.M_dstE = tmpIn.M_dstM = CONST.R_NONE;
-                tmpIn.M_Cnd = false;
+                newInput.M_icode = CONST.I_NOP;
+                newInput.M_stat = CONST.S_BUB;
+                newInput.M_dstE = newInput.M_dstM = CONST.R_NONE;
+                newInput.M_Bch = false;
             }
 
             // Execute bubble
             if (E_bubble) {
-                tmpIn.E_icode = CONST.I_NOP; tmpIn.E_ifun = 0;
-                tmpIn.E_stat = CONST.S_BUB;
-                tmpIn.E_dstE = tmpIn.E_dstM = tmpIn.E_srcA = tmpIn.E_srcB = CONST.R_NONE;
+                newInput.E_icode = CONST.I_NOP; newInput.E_ifun = 0;
+                newInput.E_stat = CONST.S_BUB;
+                newInput.E_dstE = newInput.E_dstM = newInput.E_srcA = newInput.E_srcB = CONST.R_NONE;
             }
 
             // Decode stall
             if (D_stall) {
-                tmpIn.D_icode = input.D_icode;
-                tmpIn.D_ifun = input.D_ifun;
-                tmpIn.D_rA = input.D_rA;
-                tmpIn.D_rB = input.D_rB;
-                tmpIn.D_valC = input.D_valC;
-                tmpIn.D_valP = input.D_valP;
+                newInput.D_icode = input.D_icode;
+                newInput.D_ifun = input.D_ifun;
+                newInput.D_rA = input.D_rA;
+                newInput.D_rB = input.D_rB;
+                newInput.D_valC = input.D_valC;
+                newInput.D_valP = input.D_valP;
             }
 
             // Decode bubble
             if (D_bubble) {
-                tmpIn.D_icode = CONST.I_NOP; tmpIn.D_ifun = 0;
-                tmpIn.D_stat = CONST.S_BUB;
+                newInput.D_icode = CONST.I_NOP; newInput.D_ifun = 0;
+                newInput.D_stat = CONST.S_BUB;
             }
 
             // Fetch stall
             if (F_stall) {
-                tmpIn.F_predPC = input.F_predPC;
+                newInput.F_predPC = input.F_predPC;
             }
 
-            input = tmpIn;
+            input = newInput;
         };
 
         // 产生一个时钟上升沿
@@ -463,9 +468,11 @@
             execute();
             decode();
             fetch();
+
             ++ cycle;
             if(stat != CONST.S_BUB) ++ instruction;
-            pipeline_logic();
+
+            pipeline_control_logic();
         };
 
         this.getStat = function () {
@@ -505,9 +512,16 @@
         };
 
         this.getZF = function() {
-            console.log(alu.getZF())
             return alu.getZF();
-        }
+        };
+
+        this.getSF = function() {
+            return alu.getSF();
+        };
+
+        this.getOF = function() {
+            return alu.getOF();
+        };
 
         this.getInput = function() {
             return input;

@@ -53,62 +53,10 @@
         return "0x" + (new Array(9 - tHex.length)).join('0') + tHex;
     };
 
-    window.updateDisplay = function(tReg) {
-        for(entry in tReg) {
-            if(document.getElementById(entry) != null) {
-                $('#' + entry).html(tReg[entry]);
-            }
-        }
-        var readAble = function(elemID, transfer) {
-            $('#' + elemID).html(transfer($('#' + elemID).html()));
-        };
-        $('#stat').html(VM.CPU.getStat());
-        $('#instruction').html(VM.CPU.getInstruction());
-        $('#cycle').html(VM.CPU.getCycle());
-        $('#CPI').html(VM.CPU.getCPI());
-        readAble('D_stat', getStatName);
-        readAble('E_stat', getStatName);
-        readAble('M_stat', getStatName);
-        readAble('W_stat', getStatName);
-        readAble('stat', getStatName);
-        readAble('D_icode', getInstructionName);
-        readAble('E_icode', getInstructionName);
-        readAble('M_icode', getInstructionName);
-        readAble('W_icode', getInstructionName);
-        readAble('D_rA', getRegisterName);
-        readAble('D_rB', getRegisterName);
-        readAble('E_dstE', getRegisterName);
-        readAble('E_dstM', getRegisterName);
-        readAble('E_srcA', getRegisterName);
-        readAble('E_srcB', getRegisterName);
-        readAble('M_dstE', getRegisterName);
-        readAble('M_dstM', getRegisterName);
-        readAble('W_dstE', getRegisterName);
-        readAble('W_dstM', getRegisterName);
-        readAble('F_predPC', toHexString);
-        readAble('D_valC', toHexString);
-        readAble('D_valP', toHexString);
-        readAble('E_valA', toHexString);
-        readAble('E_valB', toHexString);
-        readAble('E_valC', toHexString);
-        readAble('M_valA', toHexString);
-        readAble('M_valE', toHexString);
-        readAble('W_valE', toHexString);
-        readAble('W_valM', toHexString);
-        $('#ZF').html(VM.CPU.getZF());
-
-        for (var i = 0; i < 8; ++ i) {
-            var $Node = $('#' + getRegisterName(i));
-            var pre = $Node.html();
-            $Node.html(VM.R[getRegisterName(i)]);
-            readAble(getRegisterName(i), toHexString);
-            if($Node.html() != pre) {
-                $Node.parent().finish();
-                var curColor = $Node.parent().css("background-color");
-                $Node.parent().css("background-color", "#88FF88").animate({
-                    backgroundColor: curColor
-                }, 500);
-            }
-        }
-    };
+    window.toHexChar = function(data) {
+        data = parseInt(data);
+        data = toUnsigned(data);
+        var tHex = data.toString(16);
+        return '0x' + tHex;
+    }
 })();

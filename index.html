@@ -4,8 +4,10 @@
         <meta charset="utf-8" />
         <title>Y86 Simulator</title>
         <link rel="stylesheet" type="text/css" href="./css/simulator.css" />
+        <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
         <script language="javascript" src="./js/jquery.min.js"></script>
         <script language="javascript" src="./js/jquery-bganimate.min.js"></script>
+        <script language="javascript" src="./js/FileSaver.js"></script>
         <script language="javascript" src="./js/constants.js"></script>
         <script language="javascript" src="./js/utils.js"></script>
         <script language="javascript" src="./js/memory.js"></script>
@@ -18,16 +20,16 @@
         <div id="drop_area" class="drop_area"></div>
 
         <div id="controller" class="header">
-            <img src="./img/prev.png" id="prev">
-            <img src="./img/pause.png" id="pause">
-            <img src="./img/start.png" id="start">
-            <img src="./img/next.png" id="next">
-            <img src="./img/reset.png" id="reset">
+            <button id="prev">Prev</button>
+            <button id="pause">Pause</button>
+            <button id="start">Start</button>
+            <button id="next">Next</button>
+            <button id="reset">Reset</button>
             Frequency: <input type="text" maxlength="3" placeholder="in Hz" id="freq" size="5" value="50" /> Hz
             <input type="text" maxlength="10" placeholder="Mem Address" id="memaddr" size="15" />
         </div>
 
-        <div id="blocks" class="container">
+        <div id="blocks" class="arena">
             <div id="fetch" class="block fetch">
                 <div id="fetch_title" class="block_title">Fetch</div>
                 <div class="entry_block">
@@ -35,11 +37,11 @@
                     <div class="entry_content" id="F_predPC">0x00000000</div>
                 </div>
                 <div class="entry_block">
-                    <div class="entry_title">CPU STAT</div>
+                    <div class="entry_title">STAT</div>
                     <div class="entry_content" id="stat">S_AOK</div>
                 </div>
                 <div class="entry_block">
-                    <div class="entry_title">CPU Cycles</div>
+                    <div class="entry_title">Cycles</div>
                     <div class="entry_content" id="cycle">0</div>
                 </div>
                 <div class="entry_block">
@@ -140,8 +142,8 @@
                     <div class="entry_content" id="M_icode">I_NOP</div>
                 </div>
                 <div class="entry_block">
-                    <div class="entry_title">Cnd</div>
-                    <div class="entry_content" id="M_Cnd">false</div>
+                    <div class="entry_title">Bch</div>
+                    <div class="entry_content" id="M_Bch">0</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">valE</div>
@@ -239,6 +241,13 @@
             </div>
         </div>
 
+        <div>
+            <div>
+                Filename: <input type="text" id="save_filename" placeholder="filename"/>.txt
+                <button id="save">Save</button>
+            </div>
+        </div>
+
         <script language="javascript">
             var pre =$('#drop_area').html();
             console.log(pre);
@@ -253,32 +262,40 @@
             $('#memaddr').change(function() {
                 _updateMem();
             });
+
             $('#prev').click(function() {
                 lastStep();
             });
+
             $('#next').click(function() {
                 nextStep();
             });
+
             $('#start').click(function() {
                 startTimer($('#freq').val());
             });
+
             $('#pause').click(function() {
                 stopTimer();
             });
+
             $('#reset').click(function() {
                 YOReload(true);
-            })
+            });
+
+            $('#save').click(function(){
+                saveResult();
+            });
+
             $(document).keydown(function(e) {
                 if (e.keyCode == 37) lastStep(); // Left
                 else if (e.keyCode == 39) nextStep(); // Right
-                else if (e.keyCode == 67) $('#freq').focus(); // C
-                else if (e.keyCode == 77) $('#memaddr').focus(); // C
-                else if (e.keyCode == 82) startTimer($('#freq').val()); // R
-                else if (e.keyCode == 83) YOReload(true); // S
-                else if (e.keyCode == 84) stopTimer(); // T
+                else if (e.keyCode == 13) startTimer($('#freq').val()); // Enter
+                else if (e.keyCode == 82) YOReload(true); // R
                 else return;
                 e.preventDefault();
             }).keyup(function(e) {	_updateMem(); });
+
             $('html body').on(
                     'dragover',
                     function(e) {
@@ -324,11 +341,13 @@
             );
 
             function nextStep() {
+                console.log('step');
                 if(!YOLoaded) return YOReload();
                 try {
                     VM.CPU.tick();
-                } catch (e) {
-                    window.alert("VM was terminated by signal " + getStatName(e));
+                }
+                catch (e) {
+                    window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }
                 updateDisplay(VM.CPU.getInput());
@@ -344,7 +363,7 @@
             }
 
             function doStep(cycleNum) {
-                for(var i = 0; i < cycleNum; ++ i) VM.CPU.tick();
+                for (var i = 0; i < cycleNum; ++ i) VM.CPU.tick();
                 updateDisplay(VM.CPU.getInput());
             }
 

@@ -40,7 +40,7 @@
         this.M_dstE = CONST.R_NONE;
         this.M_dstM = CONST.R_NONE;
         this.M_stat = CONST.S_BUB;
-        this.M_Cnd = false;
+        this.M_Bch = false;
 
         // Write back
         this.W_icode = CONST.I_NOP;
