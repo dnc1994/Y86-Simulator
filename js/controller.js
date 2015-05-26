@@ -51,12 +51,11 @@
                     VM.M.writeByte(addr, tmpByte);
                 }
             }
-            if(!window.YOLoaded)
-                //$('#drop_area').text(fileName + " loaded in " + (((new Date()).getMilliseconds() - start.getMilliseconds()) / 1000).toFixed(3) + " s").html();
-                $('#drop_area').text(fileName + " loaded.").html();
+            //$('#status').text(fileName + " loaded in " + (((new Date()).getMilliseconds() - start.getMilliseconds()) / 1000).toFixed(3) + " s").html();
+            $('#status').html(fileName + " loaded.");
         }
         catch (e) {
-            $('#drop_area').text("File " + fileName + ": " + e.toString());
+            $('#status').text("File " + fileName + ": " + e.toString());
         }
         VM.CPU = new CPU();
         if (needUpdate || !window.YOLoaded)
