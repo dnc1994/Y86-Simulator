@@ -1,0 +1,363 @@
+/*
+ * File: assembler.js
+ * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ */
+
+(function() {
+    // 指令对应的 icode
+    var insCode = {
+        'halt': 0,
+        'nop': 1,
+        'rrmovl': 2,
+        'irmovl': 3,
+        'rmmovl': 4,
+        'mrmovl': 5,
+        'addl': 6,
+        'subl': 6,
+        'andl': 6,
+        'xorl': 6,
+        'jmp': 7,
+        'jle': 7,
+        'jl': 7,
+        'je': 7,
+        'jne': 7,
+        'jge': 7,
+        'jg': 7,
+        'call': 8,
+        'ret': 9,
+        'pushl': 10,
+        'popl': 11
+    };
+
+    // 指令对应的 ifun
+    var insFun = {
+        'addl': 0,
+        'subl': 1,
+        'andl': 2,
+        'xorl': 3,
+        'jmp': 0,
+        'jle': 1,
+        'jl': 2,
+        'je': 3,
+        'jne': 4,
+        'jge': 5,
+        'jg': 6,
+    };
+
+    // 指令对应的长度
+    var insLength = [1, 1, 2, 6, 6, 6, 2, 5, 5, 1, 2, 2];
+
+    // 指令对应的语法
+    var insSyntax = {};
+
+    insSyntax['halt'] = [];
+    insSyntax['nop'] = [];
+    insSyntax['rrmovl'] = ['rA', 'rB'];
+    insSyntax['irmovl'] = ['V', 'rB'];
+    insSyntax['rmmovl'] = ['rA', 'D(rB)'];
+    insSyntax['mrmovl'] = ['D(rB)', 'rA'];
+    insSyntax['addl'] = ['rA', 'rB'];
+    insSyntax['subl'] = ['rA', 'rB'];
+    insSyntax['xorl'] = ['rA', 'rB'];
+    insSyntax['andl'] = ['rA', 'rB'];
+    insSyntax['jmp'] = ['Dest'];
+    insSyntax['jle'] = ['Dest'];
+    insSyntax['jl'] = ['Dest'];
+    insSyntax['je'] = ['Dest'];
+    insSyntax['jne'] = ['Dest'];
+    insSyntax['jge'] = ['Dest'];
+    insSyntax['jg'] = ['Dest'];
+    insSyntax['call'] = ['Dest'];
+    insSyntax['ret'] = [];
+    insSyntax['pushl'] = ['rA'];
+    insSyntax['popl'] = ['rA'];
+
+    var regName = ['%eax', '%ecx', '%edx', '%ebx', '%esp', '%ebp', '%esi', '%edi'];
+
+    window.YSSyntaxError = function (lineNum, msg) {
+        this.lineNum = lineNum;
+        this.msg = 'Syntax error at Line ' + (lineNum + 1) + ' :' + msg;
+    };
+
+    window.YSSyntaxError.prototype.toString = function() {
+        return this.msg;
+    };
+
+    // 填充为 8 位 16 进制
+    var pad = function(n) {
+        if (n.length == 8) return n;
+        else return padHex(n, 8);
+    };
+
+    // 用于编码单条指令
+    var insEncoder = [];
+    
+    insEncoder[0] = function() {
+        return '00';
+    };
+
+    insEncoder[1] = function() {
+        return '10';
+    };
+
+    insEncoder[2] = function() {
+        return '20' + this.rA + this.rB;
+    };
+
+    insEncoder[3] = function() {
+        return '308' + this.rB + pad(this.V);
+    };
+
+    insEncoder[4] = function() {
+        return '40' + this.rA + this.rB + pad(this.D);
+    };
+
+    insEncoder[5] = function() {
+        return '50' + this.rA + this.rB + pad(this.D);
+    };
+
+    insEncoder[6] = function() {
+        return '6' + this.fn + this.rA + this.rB;
+    };
+
+    insEncoder[7] = function() {
+        return '7' + this.fn + pad(this.Dest);
+    };
+
+    insEncoder[8] = function() {
+        return '80' + pad(this.Dest);
+    };
+
+    insEncoder[9] = function() {
+        return '90';
+    };
+
+    insEncoder[10] = function() {
+        return 'a0' + this.rA + '8';
+    };
+
+    insEncoder[11] = function() {
+        return 'b0' + this.rA + '8';
+    };
+
+    // 获取寄存器编码
+    var getRegCode = function(num) {
+        var code = regName.indexOf(num);
+        if (code == -1)
+            throw new Error('Not a register: "' + num + '"');
+        else
+            return code.toString(16);
+    };
+
+    // 指令的参数进行编码
+    var evalArgs = function(list, args, symbols) {
+        //console.log(list, args, symbols);
+        var item, result = {};
+        for (i in list) {
+            item = list[i];
+            if (item === 'rA') {
+                result['rA'] = getRegCode(args[i]);
+            }
+            else if (item === 'rB') {
+                result['rB'] = getRegCode(args[i]);
+            }
+            else if (item === 'V' || item === 'D') {
+                if (symbols.hasOwnProperty(args[i])) {
+                    result['V'] = toLittleEndian(padHex(symbols[args[i]], 8));
+                    result['D'] = result['V'];
+                }
+                else {
+                    try {
+                        result['V'] = toLittleEndian(padHex(parseNumber(args[i].replace('$', '')), 8));
+                    }
+                    catch (e) {
+                        throw new Error('Undefined symbol: ' + args[i]);
+                    }
+                    result['D'] = result['V'];
+                }
+            }
+            else if (item === 'Dest') {
+                try {
+                    result['Dest'] = toLittleEndian(padHex(symbols[args[i]], 8));
+                }
+                catch (e) {
+                    throw new Error('Undefined symbol: ' + args[i]);
+                }
+            }
+            else if (item === 'D(rB)') {
+                console.log(args[i].replace(/\(.*/, ''));
+                result['D'] = toLittleEndian(padHex(parseNumber(args[i].replace(/\(.*/, '')) >>> 0, 8));
+                result['rB'] = getRegCode(args[i].replace(/^.*\((.*)\)/, '$1'));
+            }
+        }
+        console.log(result);
+        return result;
+    };
+
+    // 对单条指令进行编码
+    window.Encode = function(ins, symbols, lineNum) {
+        var result = '',
+            args = [],
+            vars = {},
+            icode;
+
+        console.log('processing ' + ins);
+        ins = ins.replace(/\s*,\s*/i, ',');
+        args = ins.split(' ');
+        ins = args.splice(0, 1)[0];
+        args = args[0] ? args[0].split(',') : new Array();
+
+        vars = evalArgs(insSyntax[ins], args, symbols);
+
+        icode = insCode[ins];
+        if (insFun.hasOwnProperty(ins)) {
+            vars['fn'] = insFun[ins];
+        }
+        console.log(vars);
+
+        if (icode in insEncoder) {
+            result = insEncoder[icode].call(vars);
+        }
+        else {
+            // 非法指令
+            throw new YSSyntaxError(lineNum, 'Invalid instruction "' + ins + '"');
+        }
+        return result;
+    };
+
+    // YS Assembler
+    window.YSLoader = function(data, filename) {
+        console.log('YSLoader Triggered.');
+        window.YOLoaded = false;
+        window.YOData = '';
+        window.YOData = '';
+        window.YSData = data;
+        window.YSName = filename;
+
+        // 去除备注和填充空格
+        var lines = data.split('\n');
+        for (var i = 0; i < lines.length; ++ i) {
+            lines[i] = lines[i].replace(/#.*/gi, '');
+            lines[i] = lines[i].replace(/\/\*.*\*\//gi, '');
+            lines[i] = lines[i].replace(/^\s+/gi, '');
+            lines[i] = lines[i].replace(/\s+$/gi, '');
+            lines[i] = lines[i].replace(/\s+/gi, ' ');
+        }
+
+        //console.log(lines);
+
+        if (lines[lines.length - 1].trim() != '')
+            throw new YSSyntaxError([lines.length - 1, 'Last line must be empty.']);
+
+        var result = new Array(lines.length);
+        var symbols = {};
+        var counter = 0;
+        var line, symbol, directive, ins;
+
+        // 创建 symbol table 并记录内存地址
+        for (var i = 0; i < lines.length; ++ i) {
+            line = lines[i];
+            result[i] = ['', '', line];
+
+            if (line == '') continue;
+
+            // 行号
+            result[i][0] = [toHexString(counter, 4)];
+
+            // 添加 symbol
+            symbol = line.match(/(^.*?):/i);
+            if (symbol) {
+                symbols[symbol[1]] = counter;
+                lines[i] = line = line.replace(/^.*?:\s*/i, '');
+            }
+
+            // 处理 directives
+            directive = line.match(/(^\..*?) (.*)/i);
+            if (directive) {
+                if (directive[1] == '.pos') {
+                    try {
+                        counter = parseNumber(directive[2]);
+                    }
+                    catch (e) {
+                        throw new YSSyntaxError(i, e.message);
+                    }
+                }
+                else if (directive[1] == '.align') {
+                    try {
+                        var nAlign = parseNumber(directive[2]);
+                    }
+                    catch (e) {
+                        throw new YSSyntaxError(i, e.message);
+                    }
+                    counter = Math.ceil(counter / nAlign) * nAlign;
+                }
+                else if (directive[1] == '.long') {
+                    counter += 4;
+                }
+                else
+                    throw new YSSyntaxError(i, 'Unknown directive: ' + directive[1]);
+            }
+
+            // 计算指令长度偏移量
+            ins = line.match(/(^[a-z]+)/i);
+            if (ins) {
+                var icode = insCode[ins[1]];
+                counter += insLength[icode];
+            }
+        }
+
+        // 汇编, 处理 long directives
+        for (var i = 0; i < lines.length; ++ i) {
+            line = lines[i];
+            if (line.trim() == '') continue;
+
+            //console.log(line);
+
+            directive = line.match(/^\.long (.*)/i);
+
+            if (directive) {
+                var val;
+                try {
+                    val = parseNumber(directive[1]);
+                }
+                catch (e) {
+                    if (symbols.hasOwnProperty(directive[1]))
+                        val = symbols[directive[1]];
+                    else {
+                        throw new YSSyntaxError(i, 'Error while parsing .long directive: undefined symbol ' + directive[1]);
+                    }
+                }
+                result[i][1] = toLittleEndian(padHex(val, 8));
+                counter += 4;
+                continue;
+            }
+
+            if (line[0] == '.') continue;
+
+            ins = line.match(/^([a-z]+)(.*)/i);
+            if (ins) {
+                try {
+                    result[i][1] = Encode(line, symbols, i);
+                }
+                catch (e) {
+                    throw new YSSyntaxError(i, e.message);
+                }
+            }
+        }
+
+        for (var i = 0; i < result.length; ++ i) {
+            line = result[i];
+            var part = '  ';
+            if (line[0].length)
+                part += line[0] + ': ' + line[1];
+            // 填充到 24 个字符
+            var pad = new Array(24 - part.length).join(' ');
+            result[i] = part + pad + '| ' + line[2];
+        }
+
+        console.log(result.join('\n'));
+
+        // 汇编结束, 调用 YOLoader 载入汇编得到的 YO 文件
+        YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true);
+    }
+})();

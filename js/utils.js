@@ -46,17 +46,32 @@
         return n >>> 0;
     };
 
-    window.toHexString = function(data) {
-        data = parseInt(data);
-        data = toUnsigned(data);
-        var tHex = data.toString(16);
-        return "0x" + (new Array(9 - tHex.length)).join('0') + tHex;
+    window.parseNumber = function(str) {
+        if (isNaN(str))
+            throw new Error('Not a number: ' + str);
+        else if (str.length > 2 && str.substr(0, 2) === '0x')
+            return parseInt(str, 16);
+        else
+            return parseInt(str, 10);
     };
 
-    window.toHexChar = function(data) {
+    window.padHex = function(data, len) {
+        if (typeof len === 'undefined') len = 8;
         data = parseInt(data);
         data = toUnsigned(data);
         var tHex = data.toString(16);
-        return '0x' + tHex;
-    }
+        return (new Array(len + 1 - tHex.length)).join('0') + tHex;
+    };
+
+    window.toHexString = function(data, len) {
+        return '0x' + padHex(data, len);
+    };
+
+    window.toLittleEndian = function(str) {
+        if (str.length % 2 == 1) str = '0' + str;
+        var result = '';
+        for (i = str.length; i > 0; i -= 2)
+            result += str.substr(i - 2, 2);
+        return result;
+    };
 })();

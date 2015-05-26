@@ -5,6 +5,8 @@
 
 (function(){
     // YO文件的载入和解析
+    window.YOLoaded = false;
+
     window.YOSyntaxError = function(lineNum) {
         this.lineNum = lineNum;
         this.msg = "Invalid syntax at line " + (lineNum + 1);
@@ -22,45 +24,47 @@
         YOLoader(window.YOData, window.YOName, needUpdate);
     };
 
+    // YO Parser
     window.YOLoader = function(data, fileName, needUpdate) {
         console.log("YOLoader Triggered");
         window.YOData = data;
         window.YOName = fileName;
-        $('#save_filename').val(fileName.slice(0, -3));
-        var start = new Date();
         var lines = data.split("\n");
-        window.YOFile = [];
         window.VM.M = new Memory();
         window.VM.R = new Registers();
+
         var pattern = /^\s*0x([0-9a-f]+)\s*:(?:\s*)([0-9a-f]*)\s*(?:\|(?:.*))$/i;
         var empty_pattern = /^\s*((?:\|).*)?$/;
         try {
-            for (var lineNum = 0; lineNum < lines.length; ++ lineNum) {
-                lines[lineNum] = $.trim(lines[lineNum]);
-                if (empty_pattern.test(lines[lineNum]))
+            for (var i = 0; i < lines.length; ++ i) {
+                lines[i] = $.trim(lines[i]);
+                if (empty_pattern.test(lines[i]))
                     continue;
-                YOFile.push(lines[lineNum]);
-                var match = pattern.exec(lines[lineNum]);
+
+                var match = pattern.exec(lines[i]);
                 if (match == null)
-                    throw new YOSyntaxError(lineNum);
+                    throw new YOSyntaxError(i);
                 if (match[2].length % 2 == 1)
-                    throw new YOSyntaxError(lineNum);
+                    throw new YOSyntaxError(i);
+
                 var addr = parseInt(match[1], 16);
                 for (var cPos = 0; cPos < match[2].length; cPos += 2, ++ addr) {
                     var tmpByte = parseInt(match[2][cPos] + match[2][cPos + 1], 16);
+                    //console.log(i, tmpByte, match[1], match[2]);
                     VM.M.writeByte(addr, tmpByte);
                 }
             }
-            //$('#status').text(fileName + " loaded in " + (((new Date()).getMilliseconds() - start.getMilliseconds()) / 1000).toFixed(3) + " s").html();
             $('#status').html(fileName + " loaded.");
         }
         catch (e) {
             $('#status').text("File " + fileName + ": " + e.toString());
         }
+
         VM.CPU = new CPU();
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
         window.YOLoaded = true;
+        $('#save_filename').val(fileName.slice(0, -3));
     };
 
     // 输出结果
@@ -82,35 +86,35 @@
             result += 'FETCH:\n';
             result += '\tF_predPC \t= ' + toHexString(state.F_predPC) + '\n\n';
             result += 'DECODE:\n';
-            result += '\tD_icode  \t= ' + toHexChar(state.D_icode) + '\n';
-            result += '\tD_ifun   \t= ' + toHexChar(state.D_ifun) + '\n';
-            result += '\tD_rA     \t= ' + toHexChar(state.D_rA) + '\n';
-            result += '\tD_rB     \t= ' + toHexChar(state.D_rB) + '\n';
+            result += '\tD_icode  \t= ' + toHexString(state.D_icode, 0) + '\n';
+            result += '\tD_ifun   \t= ' + toHexString(state.D_ifun, 0) + '\n';
+            result += '\tD_rA     \t= ' + toHexString(state.D_rA, 0) + '\n';
+            result += '\tD_rB     \t= ' + toHexString(state.D_rB, 0) + '\n';
             result += '\tD_valC   \t= ' + toHexString(state.D_valC) + '\n';
             result += '\tD_valP   \t= ' + toHexString(state.D_valP) + '\n\n';
             result += 'EXECUTE:\n';
-            result += '\tE_icode  \t= ' + toHexChar(state.E_icode) + '\n';
-            result += '\tE_ifun   \t= ' + toHexChar(state.E_ifun) + '\n';
+            result += '\tE_icode  \t= ' + toHexString(state.E_icode, 0) + '\n';
+            result += '\tE_ifun   \t= ' + toHexString(state.E_ifun, 0) + '\n';
             result += '\tE_valC   \t= ' + toHexString(state.E_valC) + '\n';
             result += '\tE_valA   \t= ' + toHexString(state.E_valA) + '\n';
             result += '\tE_valB   \t= ' + toHexString(state.E_valB) + '\n';
-            result += '\tE_dstE   \t= ' + toHexChar(state.E_dstE) + '\n';
-            result += '\tE_dstM   \t= ' + toHexChar(state.E_dstM) + '\n';
-            result += '\tE_srcA   \t= ' + toHexChar(state.E_srcA) + '\n';
-            result += '\tE_srcB   \t= ' + toHexChar(state.E_srcB) + '\n\n';
+            result += '\tE_dstE   \t= ' + toHexString(state.E_dstE, 0) + '\n';
+            result += '\tE_dstM   \t= ' + toHexString(state.E_dstM, 0) + '\n';
+            result += '\tE_srcA   \t= ' + toHexString(state.E_srcA, 0) + '\n';
+            result += '\tE_srcB   \t= ' + toHexString(state.E_srcB, 0) + '\n\n';
             result += 'MEMORY:\n';
-            result += '\tM_icode  \t= ' + toHexChar(state.M_icode) + '\n';
+            result += '\tM_icode  \t= ' + toHexString(state.M_icode, 0) + '\n';
             result += '\tM_Bch    \t= ' + state.M_Bch + '\n';
             result += '\tM_valE   \t= ' + toHexString(state.M_valE) + '\n';
             result += '\tM_valA   \t= ' + toHexString(state.M_valA) + '\n';
-            result += '\tM_dstE   \t= ' + toHexChar(state.M_dstE) + '\n';
-            result += '\tM_dstM   \t= ' + toHexChar(state.M_dstM) + '\n\n';
+            result += '\tM_dstE   \t= ' + toHexString(state.M_dstE, 0) + '\n';
+            result += '\tM_dstM   \t= ' + toHexString(state.M_dstM, 0) + '\n\n';
             result += 'WRITE BACK:\n';
-            result += '\tW_icode  \t= ' + toHexChar(state.W_icode) + '\n';
+            result += '\tW_icode  \t= ' + toHexString(state.W_icode, 0) + '\n';
             result += '\tW_valE   \t= ' + toHexString(state.W_valE) + '\n';
             result += '\tW_valM   \t= ' + toHexString(state.W_valM) + '\n';
-            result += '\tW_dstE   \t= ' + toHexChar(state.W_dstE) + '\n';
-            result += '\tW_dstM   \t= ' + toHexChar(state.W_dstM) + '\n\n';
+            result += '\tW_dstE   \t= ' + toHexString(state.W_dstE, 0) + '\n';
+            result += '\tW_dstM   \t= ' + toHexString(state.W_dstM, 0) + '\n\n';
 
             try {
                 VM.CPU.tick();
@@ -150,6 +154,7 @@
         $('#ZF').html(+VM.CPU.getZF());
         $('#SF').html(+VM.CPU.getSF());
         $('#OF').html(+VM.CPU.getOF());
+        _updateMem();
 
         loadName('D_stat', getStatName);
         loadName('E_stat', getStatName);
@@ -186,12 +191,10 @@
             var pre = $Node.html();
             $Node.html(VM.R[getRegisterName(i)]);
             loadName(getRegisterName(i), toHexString);
-            if($Node.html() != pre) {
+            if ($Node.html() != pre) {
                 $Node.parent().finish();
                 var curColor = $Node.parent().css("background-color");
-                $Node.parent().css("background-color", "#88FF88").animate({
-                    backgroundColor: curColor
-                }, 500);
+                $Node.parent().css("background-color", "#88FF88").animate({backgroundColor: curColor}, 500);
             }
         }
     };

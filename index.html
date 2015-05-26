@@ -13,6 +13,7 @@
         <script language="javascript" src="./js/memory.js"></script>
         <script language="javascript" src="./js/registers.js"></script>
         <script language="javascript" src="./js/kernel.js"></script>
+        <script language="javascript" src="./js/assembler.js"></script>
         <script language="javascript" src="./js/controller.js"></script>
     </head>
 
@@ -253,12 +254,16 @@
             var pre =$('#drop_area').html();
             console.log(pre);
 
-            function _updateMem() {
+            window._updateMem = function() {
                 var num = parseInt($('#mem_addr').val());
-                if(isNaN(num)) num = parseInt($('#mem_addr').val(), 16);
-                if(isNaN(num)) { $('#mem_val').html('Invalid Addr'); return ; }
+                if (isNaN(num))
+                    num = parseInt($('#mem_addr').val(), 16);
+                if (isNaN(num)) {
+                    $('#mem_val').html('Invalid Addr');
+                    return ;
+                }
                 $('#mem_val').html(toHexString(VM.M.readUnsigned(num)));
-            }
+            };
 
             $('#mem_addr').change(function() {
                 _updateMem();
@@ -282,11 +287,15 @@
 
             $('#reset').click(function() {
                 YOReload(true);
-                _updateMem();
+                //_updateMem();
             });
 
             $('#save').click(function(){
                 saveResult();
+            });
+
+            $('#status').click(function(){
+               return;
             });
 
             $(document).keydown(function(e) {
@@ -332,8 +341,16 @@
                                 var reader = new FileReader();
 
                                 reader.onloadend = function(event) {
-                                    if(event.target.readyState == FileReader.DONE)
-                                        YOLoader(event.target.result, fHandle.name);
+                                    if (event.target.readyState == FileReader.DONE) {
+                                        //console.log(fHandle.name.slice(-3));
+                                        if (fHandle.name.slice(-3) == '.yo')
+                                            YOLoader(event.target.result, fHandle.name);
+                                        else if (fHandle.name.slice(-3) == '.ys')
+                                            YSLoader(event.target.result, fHandle.name);
+                                        else
+                                            alert('Unsupported file type!');
+                                    }
+
                                 };
 
                                 reader.readAsText(fHandle);
@@ -343,7 +360,7 @@
             );
 
             function nextStep() {
-                console.log('step');
+                //console.log('step');
                 if(!YOLoaded) return YOReload();
                 try {
                     VM.CPU.tick();
