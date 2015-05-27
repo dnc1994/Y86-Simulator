@@ -10,6 +10,7 @@
         window.container = new Array(Blocks);
         window.mapping = {};
         window.allocatedBlocks = 0;
+        this.maxMemAddr = 0;
         window.VMOutOfMemoryException = function(msg) { this.message = msg; };
         VMOutOfMemoryException.prototype.toString = function() { return this.message; };
         var allocateMemBlock = function(address) {
@@ -45,10 +46,12 @@
             //assert(address & 3 != 0); // Align to 4 byte.
             var highAddr = address >>> 16, lowAddr = address & 65535;
             if (typeof mapping[highAddr] == 'undefined') allocateMemBlock(address);
-            for(var i = 0; i < 4; ++ i) {
+            for (var i = 0; i < 4; ++ i) {
                 container[mapping[highAddr]][lowAddr + i] = val & 255;
                 val = val >>> 8;
             }
+            if (address = 0x100) console.log('Stack');
+            if (address > this.maxMemAddr) this.maxMemAddr = address;
         };
 
         this.writeByte = function(address, val) {
@@ -56,7 +59,9 @@
             var highAddr = address >>> 16, lowAddr = address & 65535;
             if (typeof mapping[highAddr] == 'undefined') allocateMemBlock(address);
             container[mapping[highAddr]][lowAddr] = val;
-        }
+            if (address = 0x100) console.log('Stack');
+            if (address > this.maxMemAddr) this.maxMemAddr = address;
+        };
     };
 
     window.Memory = memory;

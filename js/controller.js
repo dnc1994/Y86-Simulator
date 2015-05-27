@@ -26,12 +26,13 @@
 
     // YO Parser
     window.YOLoader = function(data, fileName, needUpdate) {
-        console.log("YOLoader Triggered");
+        console.log("YOLoader triggered.");
         window.YOData = data;
         window.YOName = fileName;
         var lines = data.split("\n");
         window.VM.M = new Memory();
         window.VM.R = new Registers();
+        window.MemList = [];
 
         var pattern = /^\s*0x([0-9a-f]+)\s*:(?:\s*)([0-9a-f]*)\s*(?:\|(?:.*))$/i;
         var empty_pattern = /^\s*((?:\|).*)?$/;
@@ -50,7 +51,6 @@
                 var addr = parseInt(match[1], 16);
                 for (var cPos = 0; cPos < match[2].length; cPos += 2, ++ addr) {
                     var tmpByte = parseInt(match[2][cPos] + match[2][cPos + 1], 16);
-                    //console.log(i, tmpByte, match[1], match[2]);
                     VM.M.writeByte(addr, tmpByte);
                 }
             }
@@ -60,11 +60,16 @@
             $('#status').text("File " + fileName + ": " + e.toString());
         }
 
+        $('#save_filename').val(fileName.slice(0, -3));
+        window.maxMemListAddr = -4;
+        $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>ESP</div>');
+
         VM.CPU = new CPU();
+
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
         window.YOLoaded = true;
-        $('#save_filename').val(fileName.slice(0, -3));
+        APlay('wolai');
     };
 
     // 输出结果
@@ -136,8 +141,17 @@
         );
     };
 
+    window.APlay = function(filename, mute){
+        if (typeof mute === 'undefined') mute = 0;
+        if (mute) return;
+        var audio = new Audio('audio/' + filename + '.mp3');
+        audio.play();
+    };
+
     // 更新显示
     window.updateDisplay = function(tReg) {
+        console.log('updateDisplay triggered.');
+
         for (entry in tReg) {
             if (document.getElementById(entry) != null) {
                 $('#' + entry).html(+tReg[entry]);
@@ -147,6 +161,12 @@
             $('#' + elemID).html(transfer($('#' + elemID).html()));
         };
 
+
+        console.log(VM.CPU.getStat());
+        if (VM.CPU.getStat() != 1)
+            APlay('caoniba');
+
+        // 更新运行状态显示
         $('#stat').html(VM.CPU.getStat());
         $('#instruction').html(VM.CPU.getInstruction());
         $('#cycle').html(VM.CPU.getCycle());
@@ -156,6 +176,7 @@
         $('#OF').html(+VM.CPU.getOF());
         _updateMem();
 
+        // 更新流水线寄存器显示
         loadName('D_stat', getStatName);
         loadName('E_stat', getStatName);
         loadName('M_stat', getStatName);
@@ -186,6 +207,7 @@
         loadName('W_valE', toHexString);
         loadName('W_valM', toHexString);
 
+        // 更新寄存器显示
         for (var i = 0; i < 8; ++ i) {
             var $Node = $('#' + getRegisterName(i));
             var pre = $Node.html();
@@ -195,7 +217,42 @@
                 $Node.parent().finish();
                 var curColor = $Node.parent().css("background-color");
                 $Node.parent().css("background-color", "#88FF88").animate({backgroundColor: curColor}, 500);
+                APlay('biu');
             }
         }
+
+        // 更新内存显示
+        //console.log(window.maxMemListAddr, VM.M.maxMemAddr);
+
+        for (var addr = 0; addr <= window.maxMemListAddr; addr += 4) {
+            var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
+            //console.log('memchange: ' + addr + ' -> ' + val);
+            $('#memval_' + addr).text(val);
+        }
+
+        if (window.maxMemListAddr < VM.M.maxMemAddr) {
+            for (var addr = window.maxMemListAddr + 4; addr <= VM.M.maxMemAddr; addr += 4) {
+                var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
+                var addrID = 'memaddr_' + addr.toString();
+                var valID = 'memval_' + addr.toString();
+                var addrStr = '<span id=' + addrID + ' class="Maddr">' + padHex(addr, 4) + '</span>';
+                var valStr = '<span id=' + valID + ' class="Mval">' + val + '</span>';
+                $('#mem_list').append($('<div>' + addrStr + valStr + '</div>'));
+            }
+        }
+        window.maxMemListAddr = VM.M.maxMemAddr;
+
+        // 更新 %ebp %esp 指针显示
+        var ebp_pos = '#memaddr_' + VM.R.R_EBP;
+        var esp_pos = '#memaddr_' + VM.R.R_ESP;
+        console.log($(ebp_pos)[0].clientTop);
+        $('#ebp_ptr').css('top', $(ebp_pos)[0].offsetTop + 'px');
+        $('#esp_ptr').css('top', $(esp_pos)[0].offsetTop + 'px');
+        //$('#mem_monitor').scrollTop($(ebp_pos)[0].offsetTop - 250);
+
+        $('#mem_monitor').animate({
+            scrollTop: $(ebp_pos)[0].offsetTop - 250
+        }, 300);
+
     };
 })();

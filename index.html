@@ -27,7 +27,7 @@
             <button id="start">Start</button>
             <button id="next">Next</button>
             <button id="reset">Reset</button>
-            Frequency: <input type="text" maxlength="3" id="freq" size="5" value="50" /> Hz
+            Frequency: <input type="text" maxlength="3" id="freq" size="5" value="5" /> Hz
             <input type="text" maxlength="10" placeholder="Mem Addr" id="mem_addr" size="15" />
         </div>
 
@@ -226,8 +226,8 @@
                     <div class="entry_content" id="R_EDI">0x00000000</div>
                 </div>
             </div>
-            <div id="ccmonitor" class="block ccmonitor">
-                <div id="ccmonitor_title" class="block_title">CC</div>
+            <div id="cc_monitor" class="block cc_monitor">
+                <div id="cc_monitor_title" class="block_title">CC</div>
                 <div class="entry_block">
                     <div class="entry_title">ZF</div>
                     <div class="entry_content" id="ZF">1</div>
@@ -239,6 +239,13 @@
                 <div class="entry_block">
                     <div class="entry_title">OF</div>
                     <div class="entry_content" id="OF">0</div>
+                </div>
+            </div>
+            <div id="mem_monitor" class="block mem_monitor">
+                <div id="mem_monitor_title" class="block_title">Memory</div>
+                <div id="mem_list" class="mem_block">
+                    <div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>EBP</div>
+                    <div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>ESP</div>
                 </div>
             </div>
         </div>
@@ -254,13 +261,15 @@
             var pre =$('#drop_area').html();
             console.log(pre);
 
+            window.wa = new Audio('audio/meiguoshengdiyage.mp3');
+
             window._updateMem = function() {
                 var num = parseInt($('#mem_addr').val());
                 if (isNaN(num))
                     num = parseInt($('#mem_addr').val(), 16);
                 if (isNaN(num)) {
                     $('#mem_val').html('Invalid Addr');
-                    return ;
+                    return;
                 }
                 $('#mem_val').html(toHexString(VM.M.readUnsigned(num)));
             };
@@ -366,6 +375,8 @@
                     VM.CPU.tick();
                 }
                 catch (e) {
+                    //APlay('meiguoshengdiyage');
+                    window.wa.play();
                     window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }
