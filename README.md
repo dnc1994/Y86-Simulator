@@ -8,3 +8,4 @@ Final project for ICS course @ Fudan University.
 - jQuery
 - Boostrap
 - FileSaver.js
+- Chart.js
