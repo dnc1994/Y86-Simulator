@@ -1,3 +1,8 @@
+/*
+ * File: simulator.css
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
+ */
+
 html, body {
     font-family: consolas !important;
     background: lightseagreen;
@@ -6,13 +11,13 @@ html, body {
 }
 
 .drop_area {
-    pointer-events: none;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     opacity: 0;
+    pointer-events: none;
 }
 
 .header {
@@ -24,18 +29,25 @@ html, body {
     margin-bottom: 30px;
 }
 
-.arena {
+.blocks {
     background-color: transparent;
-	height: 700px;
+	height: 550px;
 	width: 100%;
 	border-top: 0;
 }
 
 .block {
-	height: 650px;
+	height: 550px;
 	width: 120px;
 	float: left;
     display: inline-block;
+}
+
+.footer {
+    height: 30px;
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
 }
 
 #status {
@@ -57,36 +69,35 @@ html, body {
 }
 
 .mem_block {
-    height: 2000px;
     width: 120px;
     float: left;
 }
 
 .block_title {
-	font-weight: bold;
+    height: 32px;
+    width: 100%;
+    line-height: 32px;
+    text-align: center;
+    font-weight: bold;
 	font-size: 20px;
 	color: red;
-	width: 100%;
-	height: 32px;
-	line-height: 32px;
-	text-align: center;
 	margin-bottom: 5px;
 }
 
 .entry_block {
+    height: 40px;
 	width: 100%;
-	height: 40px;
+    text-align: center;
+    font-weight: bold;
 	display: block;
 	border: 0 2px dashed;
 	border-color: red;
-	text-align: center;
-	font-weight: bold;
 	margin-top: 2px;
 }
 
 .entry_title {
+    height: 16px;
 	width: 100%;
-	height: 16px;
 	line-height: 16px;
 	font-size: 16px;
 	color: black;
@@ -129,25 +140,15 @@ html, body {
 
 #code_box {
     position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
     left: 0;
     opacity: 0;
     pointer-events: none;
     background-color: rgba(0, 0, 0, 0.5);
-    width: 100%;
-    height: 100%;
-    top: 0;
     transition: all .3s ease;
     z-index: 1;
-}
-
-#code_box_content {
-    position: absolute;
-    left: 10%;
-    top: 5%;
-    width: 80%;
-    height: 80%;
-    transition: all .3s ease;
-    background-color: #ffffff;
 }
 
 #code_box_title {
@@ -159,9 +160,19 @@ html, body {
     float: right;
 }
 
+#code_box_content {
+    position: absolute;
+    top: 5%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    transition: all .3s ease;
+    background-color: #ffffff;
+}
+
 #code_box_content ol {
-    width: 50%;
     height: calc(100% - 30px);
+    width: 50%;
     overflow: scroll;
 }
 

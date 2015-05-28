@@ -1,9 +1,10 @@
 /*
  * File: kernel.js
- * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
  */
 
 (function() {
+
     window.VM = {
         M : new Memory(),
         R : new Registers()
@@ -527,4 +528,5 @@
             return input;
         };
     }
+
 })();

@@ -1,13 +1,14 @@
 /*
  * File: assembler.js
- * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
  */
 
 (function() {
+
     // 指令对应的 icode
     var insCode = {
-        'halt': 0,
-        'nop': 1,
+        'nop': 0,
+        'halt': 1,
         'rrmovl': 2,
         'irmovl': 3,
         'rmmovl': 4,
@@ -72,10 +73,10 @@
     insSyntax['pushl'] = ['rA'];
     insSyntax['popl'] = ['rA'];
 
+    // 寄存器编码对应的名称
     var regName = ['%eax', '%ecx', '%edx', '%ebx', '%esp', '%ebp', '%esi', '%edi'];
 
     window.YSSyntaxError = function (lineNum, msg) {
-        this.lineNum = lineNum;
         this.msg = 'Syntax error at Line ' + (lineNum + 1) + ' :' + msg;
     };
 
@@ -143,16 +144,19 @@
     // 获取寄存器编码
     var getRegCode = function(num) {
         var code = regName.indexOf(num);
-        if (code == -1)
+        if (code == -1) {
+            $('#status').text('Assemble failed: Not a register: "' + num + '"');
             throw new Error('Not a register: "' + num + '"');
+        }
         else
             return code.toString(16);
     };
 
-    // 指令的参数进行编码
-    var evalArgs = function(list, args, symbols) {
+    // 对指令的参数进行编码
+    var encodeArgs = function(list, args, symbols) {
         //console.log(list, args, symbols);
         var item, result = {};
+
         for (i in list) {
             item = list[i];
             if (item === 'rA') {
@@ -171,6 +175,7 @@
                         result['V'] = toLittleEndian(padHex(parseNumber(args[i].replace('$', '')), 8));
                     }
                     catch (e) {
+                        $('#status').text('Assemble failed: Undefined symbol: ' + args[i]);
                         throw new Error('Undefined symbol: ' + args[i]);
                     }
                     result['D'] = result['V'];
@@ -181,45 +186,42 @@
                     result['Dest'] = toLittleEndian(padHex(symbols[args[i]], 8));
                 }
                 catch (e) {
+                    $('#status').text('Assemble failed: Undefined symbol: ' + args[i]);
                     throw new Error('Undefined symbol: ' + args[i]);
                 }
             }
             else if (item === 'D(rB)') {
-                console.log(args[i].replace(/\(.*/, ''));
                 result['D'] = toLittleEndian(padHex(parseNumber(args[i].replace(/\(.*/, '')) >>> 0, 8));
                 result['rB'] = getRegCode(args[i].replace(/^.*\((.*)\)/, '$1'));
             }
         }
-        console.log(result);
         return result;
     };
 
     // 对单条指令进行编码
     window.Encode = function(ins, symbols, lineNum) {
-        var result = '',
-            args = [],
-            vars = {},
-            icode;
+        console.log('Processing instruction:' + ins);
 
-        console.log('processing ' + ins);
+        var result = '';
+        var args = [];
+        var vars = {};
+
         ins = ins.replace(/\s*,\s*/i, ',');
         args = ins.split(' ');
         ins = args.splice(0, 1)[0];
         args = args[0] ? args[0].split(',') : new Array();
+        vars = encodeArgs(insSyntax[ins], args, symbols);
 
-        vars = evalArgs(insSyntax[ins], args, symbols);
-
-        icode = insCode[ins];
+        var icode = insCode[ins];
         if (insFun.hasOwnProperty(ins)) {
             vars['fn'] = insFun[ins];
         }
-        console.log(vars);
-
         if (icode in insEncoder) {
             result = insEncoder[icode].call(vars);
         }
         else {
             // 非法指令
+            $('#status').text('Assemble failed at line ' + (lineNum + 1) + ': Invalid instruction "' + ins + '"');
             throw new YSSyntaxError(lineNum, 'Invalid instruction "' + ins + '"');
         }
         return result;
@@ -230,6 +232,7 @@
     // YS Assembler
     window.YSLoader = function(data, filename) {
         console.log('YSLoader Triggered.');
+
         window.YSLoaded = false;
         window.YOLoaded = false;
         window.YOData = '';
@@ -247,10 +250,10 @@
             lines[i] = lines[i].replace(/\s+/gi, ' ');
         }
 
-        //console.log(lines);
-
-        if (lines[lines.length - 1].trim() != '')
+        if (lines[lines.length - 1].trim() != '') {
+            $('#status').text('Assemble failed: Last line must be empty');
             throw new YSSyntaxError([lines.length - 1, 'Last line must be empty.']);
+        }
 
         var result = new Array(lines.length);
         var symbols = {};
@@ -282,6 +285,7 @@
                         counter = parseNumber(directive[2]);
                     }
                     catch (e) {
+                        $('#status').text('Assemble failed at line ' + (i + 1) + ': ' + e.message);
                         throw new YSSyntaxError(i, e.message);
                     }
                 }
@@ -290,6 +294,7 @@
                         var nAlign = parseNumber(directive[2]);
                     }
                     catch (e) {
+                        $('#status').text('Assemble failed at line ' + (i + 1) + ': ' + e.message);
                         throw new YSSyntaxError(i, e.message);
                     }
                     counter = Math.ceil(counter / nAlign) * nAlign;
@@ -297,8 +302,10 @@
                 else if (directive[1] == '.long') {
                     counter += 4;
                 }
-                else
+                else {
+                    $('#status').text('Assemble failed: Unknown directive: ' + directive[1]);
                     throw new YSSyntaxError(i, 'Unknown directive: ' + directive[1]);
+                }
             }
 
             // 计算指令长度偏移量
@@ -314,8 +321,6 @@
             line = lines[i];
             if (line.trim() == '') continue;
 
-            //console.log(line);
-
             directive = line.match(/^\.long (.*)/i);
 
             if (directive) {
@@ -327,6 +332,7 @@
                     if (symbols.hasOwnProperty(directive[1]))
                         val = symbols[directive[1]];
                     else {
+                        $('#status').text('Assemble failed: Error while parsing .long directive: undefined symbol ' + directive[1]);
                         throw new YSSyntaxError(i, 'Error while parsing .long directive: undefined symbol ' + directive[1]);
                     }
                 }
@@ -343,6 +349,7 @@
                     result[i][1] = Encode(line, symbols, i);
                 }
                 catch (e) {
+                    $('#status').text('Assemble failed at line ' + (i + 1) + ': ' + e.message);
                     throw new YSSyntaxError(i, e.message);
                 }
             }
@@ -359,10 +366,12 @@
         }
 
         window.YSLoaded = true;
+        // 渲染代码窗口并添加保存按钮
         renderCode(YSData);
         $('#code_box_title p').append($('<button id="code_box_save">Save .yo file</button>'))
 
         // 汇编结束, 调用 YOLoader 载入汇编得到的 YO 文件
         YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true);
     }
+
 })();

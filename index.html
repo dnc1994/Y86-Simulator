@@ -1,8 +1,13 @@
+<!--
+---- File: index.html
+---- Author: Zhang Linghao <zlhdnc1994@gmail.com>
+-->
+
 <!DOCTYPE HTML>
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>Y86 Simulator</title>
+        <title>Y86 Simulator by Zhang Linghao</title>
         <link rel="stylesheet" type="text/css" href="./css/simulator.css" />
         <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
         <script language="javascript" src="./js/jquery.min.js"></script>
@@ -26,7 +31,7 @@
 
         <div id="drop_area" class="drop_area"></div>
 
-        <div id="controller" class="header">
+        <div id="top_bar" class="header">
             <span id="status">Nothing Loaded.</span>
             <button id="prev">Prev</button>
             <button id="pause">Pause</button>
@@ -37,7 +42,7 @@
             <input type="text" maxlength="10" placeholder="Mem Addr" id="mem_addr" size="15" />
         </div>
 
-        <div id="blocks" class="arena">
+        <div id="monitor" class="blocks">
             <div id="fetch" class="block fetch">
                 <div id="fetch_title" class="block_title">Fetch</div>
                 <div class="entry_block">
@@ -197,8 +202,8 @@
                     <div class="entry_content" id="W_dstM">R_NONE</div>
                 </div>
             </div>
-            <div id="monitor" class="block monitor">
-                <div id="monitor_title" class="block_title">Registers</div>
+            <div id="reg_monitor" class="block reg_monitor">
+                <div id="reg_monitor_title" class="block_title">Registers</div>
                 <div class="entry_block">
                     <div class="entry_title">%eax</div>
                     <div class="entry_content" id="R_EAX">0x00000000</div>
@@ -256,59 +261,69 @@
             </div>
         </div>
 
-        <div>
-            <div>
-                Filename: <input type="text" id="save_filename" placeholder="filename" style="width: 100px" />.txt
-                <button id="save">Save</button>
-            </div>
+        <div id="bottom_bar" class="footer">
+            Filename: <input type="text" id="save_filename" placeholder="filename" style="width: 100px" />.txt
+            <button id="save">Save</button>
         </div>
 
+        <!-- 交互事件的绑定 -->
         <script language="javascript">
+
+            // 监听拖放事件
             var pre =$('#drop_area').html();
-            console.log(pre);
 
-            window.wa = new Audio('audio/meiguoshengdiyage.mp3');
-
-            window._updateMem = function() {
-                var num = parseInt($('#mem_addr').val());
-                if (isNaN(num))
-                    num = parseInt($('#mem_addr').val(), 16);
-                if (isNaN(num)) {
-                    $('#mem_val').html('Invalid Addr');
-                    return;
+            $('html body').on(
+                'dragover',
+                function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                 }
-                $('#mem_val').html(toHexString(VM.M.readUnsigned(num)));
-            };
+            ).on(
+                'dragenter',
+                function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    pre = $('#drop_area').html();
+                }
+            ).on(
+                'dragleave',
+                function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $('#drop_area').html(pre);
+                }
+            ).on(
+                'drop',
+                function(e) {
+                    if (e.originalEvent.dataTransfer) {
+                        if(e.originalEvent.dataTransfer.files.length) {
+                            e.preventDefault();
+                            e.stopPropagation();
 
-            $('#mem_addr').change(function() {
-                _updateMem();
-            });
+                            var files = e.originalEvent.dataTransfer.files;
+                            var fHandle = files[0];
+                            var reader = new FileReader();
 
-            $('#prev').click(function() {
-                lastStep();
-            });
+                            reader.onloadend = function(event) {
+                                if (event.target.readyState == FileReader.DONE) {
+                                    // 创建代码窗口
+                                    $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>');
+                                    if (fHandle.name.slice(-3) == '.yo')
+                                        YOLoader(event.target.result, fHandle.name);
+                                    else if (fHandle.name.slice(-3) == '.ys')
+                                        YSLoader(event.target.result, fHandle.name);
+                                    else
+                                        alert('Unsupported file type!');
+                                }
+                            };
 
-            $('#next').click(function() {
-                nextStep();
-            });
+                            reader.readAsText(fHandle);
+                        }
+                    }
+                }
+            );
 
-            $('#start').click(function() {
-                startTimer($('#freq').val());
-            });
-
-            $('#pause').click(function() {
-                stopTimer();
-            });
-
-            $('#reset').click(function() {
-                YOReload(true);
-                //_updateMem();
-            });
-
-            $('#save').click(function(){
-                saveResult();
-            });
-
+            // 监听按键
             $(document).keydown(function(e) {
                 if (e.keyCode == 37) lastStep(); // Left
                 else if (e.keyCode == 39) nextStep(); // Right
@@ -316,71 +331,15 @@
                 else if (e.keyCode == 82) YOReload(true); // R
                 else return;
                 e.preventDefault();
-            }).keyup(function(e) {	_updateMem(); });
+            }).keyup(function(e) { updateMem(); });
 
-            $('html body').on(
-                    'dragover',
-                    function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-            ).on(
-                    'dragenter',
-                    function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        pre = $('#drop_area').html();
-                        $('#drop_area').html("Drop to load :)");
-                    }
-            ).on(
-                    'dragleave',
-                    function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        $('#drop_area').html(pre);
-                    }
-            ).on(
-                    'drop',
-                    function(e) {
-                        if (e.originalEvent.dataTransfer) {
-                            if(e.originalEvent.dataTransfer.files.length) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                var files = e.originalEvent.dataTransfer.files; // FileList object
-                                var fHandle = files[0];
-
-                                var reader = new FileReader();
-
-                                reader.onloadend = function(event) {
-                                    if (event.target.readyState == FileReader.DONE) {
-                                        $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>');
-
-                                        //console.log(fHandle.name.slice(-3));
-                                        if (fHandle.name.slice(-3) == '.yo')
-                                            YOLoader(event.target.result, fHandle.name);
-                                        else if (fHandle.name.slice(-3) == '.ys')
-                                            YSLoader(event.target.result, fHandle.name);
-                                        else
-                                            alert('Unsupported file type!');
-                                    }
-
-                                };
-
-                                reader.readAsText(fHandle);
-                            }
-                        }
-                    }
-            );
-
-            function nextStep() {
-                //console.log('step');
-                if(!YOLoaded) return YOReload();
+            // 步进
+            var nextStep = function() {
+                if (!YOLoaded) return YOReload();
                 try {
                     VM.CPU.tick();
                 }
                 catch (e) {
-                    //APlay('meiguoshengdiyage');
-                    window.wa.play();
                     window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }
@@ -388,59 +347,72 @@
                 return true;
             }
 
-            function lastStep() {
-                if(!YOLoaded) return YOReload();
+            // 步退
+            var lastStep = function() {
+                if (!YOLoaded) return YOReload();
                 var lastCycle = VM.CPU.getCycle() - 1;
                 if(lastCycle < 0) return;
                 YOReload();
                 doStep(lastCycle);
             }
 
-            function doStep(cycleNum) {
+            // 快进多步
+            var doStep = function(cycleNum) {
                 for (var i = 0; i < cycleNum; ++ i) VM.CPU.tick();
                 updateDisplay(VM.CPU.getInput());
             }
 
-            window.startTimer = function(freq) {
-                freq = parseFloat(freq);
-                if (freq < 1e-8) alert("Invalid frequency!");
-                if (freq > 999) alert("Too fast!");
-                var delay = Math.round(1000 / freq);
-                if(window.clockTimer) window.clearInterval(window.clockTimer);
-                window.clockTimer = window.setInterval(function(){ if(!nextStep()) stopTimer();}, delay);
-            };
+            // 更新监视的内存值
+            $('#mem_addr').change(function() {
+                updateMem();
+            });
 
-            window.stopTimer = function() {
-                if (window.clockTimer) window.clearInterval(window.clockTimer);
-                window.clockTimer = undefined;
-            };
+            // 步退
+            $('#prev').click(function() {
+                lastStep();
+            });
 
-            window.renderCode = function(Data) {
-                var container = $('<ol></ol>');
-                Data.replace(/ /g, '&nbsp;').split('\n').forEach(function (lineCode) {
-                    container.append($('<li></li>').html(lineCode));
-                });
-                $('#code_box_content').append(container);
-            };
+            // 步进
+            $('#next').click(function() {
+                nextStep();
+            });
 
+            // 自动运行
+            $('#start').click(function() {
+                startTimer($('#freq').val());
+            });
+
+            // 暂停
+            $('#pause').click(function() {
+                stopTimer();
+            });
+
+            // 重置
+            $('#reset').click(function() {
+                YOReload(true);
+            });
+
+            // 保存运行结果
+            $('#save').click(function(){
+                saveResult();
+            });
+
+            // 显示代码窗口
             $('body').on('click', '#status', function (){
                 if (!window.YOLoaded) return;
                 $('#code_box').addClass('show');
             });
 
+            // 关闭代码窗口
             $('body').on('click', '#code_box_close', function (){
                 $('#code_box').removeClass('show');
             });
 
+            // 保存汇编结果
             $('body').on('click', '#code_box_save', function () {
-                saveAs(
-                    new Blob(
-                        [YOData],
-                        {type: "text/plain;charset=utf-8"}
-                    ),
-                    window.YOName
-                );
+                saveAssembleResult();
             });
+
         </script>
     </body>
 </html>

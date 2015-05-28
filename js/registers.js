@@ -1,9 +1,11 @@
 /*
  * File: registers.js
- * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
  */
 
 (function() {
+
+    // 流水线寄存器
     var pipeline_registers = function(val) {
         if (val === null || !(val instanceof Object)) {
             val = {};
@@ -57,6 +59,7 @@
         }
     };
 
+    // 寄存器
     var registers = function(val) {
         if(val === null || !(val instanceof Object)) {
             val = {};
@@ -72,7 +75,6 @@
         this.R_EDI = 0;
 
         for (entry in val) {
-            //console.log(entry);
             if(typeof this[entry] != 'undefined') {
                 this[entry] = val[entry];
             }
@@ -81,10 +83,10 @@
         var R_ID = ['R_EAX', 'R_ECX', 'R_EDX', 'R_EBX', 'R_ESP', 'R_EBP', 'R_ESI', 'R_EDI'];
 
         this.get = function(id) {
-            if(typeof id == 'undefined') {
+            if (typeof id == 'undefined') {
                 return 0;
             }
-            if(id >= 0 && id < R_ID.length) {
+            if (id >= 0 && id < R_ID.length) {
                 return this[R_ID[id]];
             }
             return 0;
@@ -100,4 +102,5 @@
 
     window.Registers = registers;
     window.PipelineRegisters = pipeline_registers;
+
 })();

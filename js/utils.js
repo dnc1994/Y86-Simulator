@@ -1,30 +1,34 @@
 /*
  * File: utils.js
- * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
  */
 
 (function() {
-    window.AssertError = function(msg) { this.message = msg; };
-    window.AssertError.prototype.toString = function() { return this.msg; };
+
+    window.AssertError = function(msg) {
+        this.message = msg;
+    };
+    window.AssertError.prototype.toString = function() {
+        return this.msg;
+    };
+
     window.assert = function(bool) {
         if (typeof bool == 'undefined') throw new AssertError("Assertion failed. Result is undefined.");
         if (bool === false) throw new AssertError("Assertion failed. Result is false.");
         if (bool === null) throw new AssertError("Assertion failed. Result is null.");
         if (typeof bool == 'number') {
-            if(bool % 1 == 0 && bool == 0) throw new AssertError("Assertion failed. Result is 0.");
-            if(Math.abs(bool) < 1e-8) throw new AssertError("Assertion failed. Result is smaller than EPS(1e-8).");
+            if (bool % 1 == 0 && bool == 0) throw new AssertError("Assertion failed. Result is 0.");
+            if (Math.abs(bool) < 1e-8) throw new AssertError("Assertion failed. Result is smaller than EPS(1e-8).");
             return ;
         }
         if (typeof bool == 'string') {
             if(bool.length == 0) throw new AssertError("Assertion failed. Result is empty string.");
             return ;
         }
-        // Default
         if (!bool) throw new AssertError("Assertion failed. Result is regarded as false.");
     };
 
     window.isInt = function(n) {
-        // uint32.
         return typeof n == 'number' && n % 1 == 0;
     };
 
@@ -46,6 +50,7 @@
         return n >>> 0;
     };
 
+    // 解析 10/16 进制数字
     window.parseNumber = function(str) {
         if (isNaN(str))
             throw new Error('Not a number: ' + str);
@@ -55,6 +60,7 @@
             return parseInt(str, 10);
     };
 
+    // 转换并填充为 len 位 16 进制字符串
     window.padHex = function(data, len) {
         if (typeof len === 'undefined') len = 8;
         data = parseInt(data);
@@ -63,15 +69,18 @@
         return (new Array(len + 1 - tHex.length)).join('0') + tHex;
     };
 
+    // 在 padHex 的结果之前加上 0x
     window.toHexString = function(data, len) {
         return '0x' + padHex(data, len);
     };
 
+    // 转换为小端表示
     window.toLittleEndian = function(str) {
         if (str.length % 2 == 1) str = '0' + str;
         var result = '';
         for (i = str.length; i > 0; i -= 2)
             result += str.substr(i - 2, 2);
         return result;
+
     };
 })();

@@ -1,14 +1,11 @@
 /*
  * File: controller.js
- * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
  */
 
 (function(){
-    // YO文件的载入和解析
-    window.YOLoaded = false;
 
     window.YOSyntaxError = function(lineNum) {
-        this.lineNum = lineNum;
         this.msg = "Invalid syntax at line " + (lineNum + 1);
     };
 
@@ -18,21 +15,25 @@
 
     window.YOReload = function(needUpdate) {
         window.stopTimer();
-        if (typeof YOLoaded == 'undefined') {
-            $('#drop_area').text("Nothing loaded :(").html();
+        if (!YOLoaded) {
+            alert('Nothing loaded :(');
+            return;
         }
         YOLoader(window.YOData, window.YOName, needUpdate);
     };
 
+    window.YOLoaded = false;
+
     // YO Parser
     window.YOLoader = function(data, fileName, needUpdate) {
         console.log("YOLoader triggered.");
+
         window.YOData = data;
         window.YOName = fileName;
-        var lines = data.split("\n");
         window.VM.M = new Memory();
         window.VM.R = new Registers();
-        window.MemList = [];
+
+        var lines = data.split("\n");
 
         var pattern = /^\s*0x([0-9a-f]+)\s*:(?:\s*)([0-9a-f]*)\s*(?:\|(?:.*))$/i;
         var empty_pattern = /^\s*((?:\|).*)?$/;
@@ -58,30 +59,29 @@
         }
         catch (e) {
             $('#status').text("File " + fileName + ": " + e.toString());
+            return;
         }
 
-        $('#save_filename').val(fileName.slice(0, -3));
+        window.YOLoaded = true;
         window.maxMemListAddr = -4;
+        $('#status').addClass('status_loaded');
+        $('#save_filename').val(fileName.slice(0, -3));
         $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>');
+        renderCode(YOData);
 
         VM.CPU = new CPU();
-
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
-        window.YOLoaded = true;
-        renderCode(YOData);
-        $('#status').addClass('status_loaded');
-        APlay('wolai');
     };
 
-    // 输出结果
+    // 输出运行结果
     window.saveResult = function() {
-        if (typeof YOLoaded == 'undefined') {
+        if (!YOLoaded) {
             alert('Nothing loaded :(');
             return;
         }
 
-        YOReload();
+        YOReload(false);
         var result = '';
         var nCycle = 0;
 
@@ -92,6 +92,7 @@
             result += '--------------------\n';
             result += 'FETCH:\n';
             result += '\tF_predPC \t= ' + toHexString(state.F_predPC) + '\n\n';
+
             result += 'DECODE:\n';
             result += '\tD_icode  \t= ' + toHexString(state.D_icode, 0) + '\n';
             result += '\tD_ifun   \t= ' + toHexString(state.D_ifun, 0) + '\n';
@@ -99,6 +100,7 @@
             result += '\tD_rB     \t= ' + toHexString(state.D_rB, 0) + '\n';
             result += '\tD_valC   \t= ' + toHexString(state.D_valC) + '\n';
             result += '\tD_valP   \t= ' + toHexString(state.D_valP) + '\n\n';
+
             result += 'EXECUTE:\n';
             result += '\tE_icode  \t= ' + toHexString(state.E_icode, 0) + '\n';
             result += '\tE_ifun   \t= ' + toHexString(state.E_ifun, 0) + '\n';
@@ -109,6 +111,7 @@
             result += '\tE_dstM   \t= ' + toHexString(state.E_dstM, 0) + '\n';
             result += '\tE_srcA   \t= ' + toHexString(state.E_srcA, 0) + '\n';
             result += '\tE_srcB   \t= ' + toHexString(state.E_srcB, 0) + '\n\n';
+
             result += 'MEMORY:\n';
             result += '\tM_icode  \t= ' + toHexString(state.M_icode, 0) + '\n';
             result += '\tM_Bch    \t= ' + state.M_Bch + '\n';
@@ -116,6 +119,7 @@
             result += '\tM_valA   \t= ' + toHexString(state.M_valA) + '\n';
             result += '\tM_dstE   \t= ' + toHexString(state.M_dstE, 0) + '\n';
             result += '\tM_dstM   \t= ' + toHexString(state.M_dstM, 0) + '\n\n';
+
             result += 'WRITE BACK:\n';
             result += '\tW_icode  \t= ' + toHexString(state.W_icode, 0) + '\n';
             result += '\tW_valE   \t= ' + toHexString(state.W_valE) + '\n';
@@ -143,11 +147,50 @@
         );
     };
 
-    window.APlay = function(filename, mute){
-        if (typeof mute === 'undefined') mute = 0;
-        if (mute) return;
-        var audio = new Audio('audio/' + filename + '.mp3');
-        audio.play();
+    // 输出汇编结果
+    window.saveAssembleResult = function() {
+        saveAs(
+            new Blob(
+                [YOData],
+                {type: "text/plain;charset=utf-8"}
+            ),
+            window.YOName
+        );
+    };
+
+    // 计时器
+    window.startTimer = function(freq) {
+        freq = parseFloat(freq);
+        if (freq < 1e-8) alert("Invalid frequency!");
+        if (freq > 999) alert("Too fast!");
+        var delay = Math.round(1000 / freq);
+        if (window.clockTimer) window.clearInterval(window.clockTimer);
+        window.clockTimer = window.setInterval(function(){ if(!nextStep()) stopTimer();}, delay);
+    };
+
+    window.stopTimer = function() {
+        if (window.clockTimer) window.clearInterval(window.clockTimer);
+        window.clockTimer = undefined;
+    };
+
+    // 渲染代码显示窗口
+    window.renderCode = function(data) {
+        var container = $('<ol></ol>');
+        data.replace(/ /g, '&nbsp;').split('\n').forEach(function (line) {
+            container.append($('<li></li>').html(line));
+        });
+        $('#code_box_content').append(container);
+    };
+
+    window.updateMem = function() {
+        var num = parseInt($('#mem_addr').val());
+        if (isNaN(num))
+            num = parseInt($('#mem_addr').val(), 16);
+        if (isNaN(num)) {
+            $('#mem_val').html('Invalid Addr');
+            return;
+        }
+        $('#mem_val').html(toHexString(VM.M.readUnsigned(num)));
     };
 
     // 更新显示
@@ -159,14 +202,6 @@
                 $('#' + entry).html(+tReg[entry]);
             }
         }
-        var loadName = function(elemID, transfer) {
-            $('#' + elemID).html(transfer($('#' + elemID).html()));
-        };
-
-
-        console.log(VM.CPU.getStat());
-        if (VM.CPU.getStat() != 1)
-            APlay('caoniba');
 
         // 更新运行状态显示
         $('#stat').html(VM.CPU.getStat());
@@ -176,9 +211,12 @@
         $('#ZF').html(+VM.CPU.getZF());
         $('#SF').html(+VM.CPU.getSF());
         $('#OF').html(+VM.CPU.getOF());
-        _updateMem();
+        updateMem();
 
         // 更新流水线寄存器显示
+        var loadName = function(elemID, transfer) {
+            $('#' + elemID).html(transfer($('#' + elemID).html()));
+        };
         loadName('D_stat', getStatName);
         loadName('E_stat', getStatName);
         loadName('M_stat', getStatName);
@@ -225,7 +263,6 @@
 
         // 更新内存显示
         //console.log(window.maxMemListAddr, VM.M.maxMemAddr);
-
         for (var addr = 0; addr <= window.maxMemListAddr; addr += 4) {
             var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
             //console.log('memchange: ' + addr + ' -> ' + val);
@@ -247,14 +284,20 @@
         // 更新 %ebp %esp 指针显示
         var ebp_pos = '#memaddr_' + VM.R.R_EBP;
         var esp_pos = '#memaddr_' + VM.R.R_ESP;
-        console.log($(ebp_pos)[0].clientTop);
         $('#ebp_ptr').css('top', $(ebp_pos)[0].offsetTop + 'px');
         $('#esp_ptr').css('top', $(esp_pos)[0].offsetTop + 'px');
-        //$('#mem_monitor').scrollTop($(ebp_pos)[0].offsetTop - 250);
-
+        $('#mem_monitor').finish();
         $('#mem_monitor').animate({
             scrollTop: $(ebp_pos)[0].offsetTop - 250
         }, 300);
-
     };
+
+
+    window.APlay = function(filename, mute){
+        if (typeof mute === 'undefined') mute = 0;
+        if (mute) return;
+        var audio = new Audio('audio/' + filename + '.mp3');
+        audio.play();
+    };
+
 })();

@@ -1,17 +1,18 @@
 /*
  * File: constants.js
- * Author: Zhang Linghao <zlhdnc1994gmail.com>
+ * Author: Zhang Linghao <zlhdnc1994@gmail.com>
  */
 
 (function() {
+
     var constants = {
         P_LOAD : 0,
         P_STALL : 1,
         P_BUBBLE: 2,
         P_ERROR : 3,
 
-        I_HALT : 0,
-        I_NOP : 1,
+        I_NOP : 0,
+        I_HALT : 1,
         I_RRMOVL : 2,
         I_IRMOVL : 3,
         I_RMMOVL : 4,
@@ -68,7 +69,7 @@
     window.getInstructionName = function(id) {
         id = parseInt(id);
         if (id < 0 || id > 11) return null;
-        return ['I_HALT', 'I_NOP', 'I_RRMOVL', 'I_IRMOVL', 'I_RMMOVL', 'I_MRMOVL', 'I_OPL',
+        return ['I_NOP', 'I_HALT', 'I_RRMOVL', 'I_IRMOVL', 'I_RMMOVL', 'I_MRMOVL', 'I_OPL',
             'I_JXX', 'I_CALL', 'I_RET', 'I_PUSHL', 'I_POPL'][id];
     };
 
@@ -80,5 +81,6 @@
     };
 
     window.CONST = constants;
+
 }
 )();
