@@ -57,6 +57,7 @@
             if (typeof mapping[highAddr] == 'undefined') allocateMemBlock(address);
             container[mapping[highAddr]][lowAddr] = val;
 
+            console.log(address);
             if (address > this.maxMemAddr) this.maxMemAddr = address;
         };
 
@@ -72,6 +73,7 @@
                 val = val >>> 8;
             }
 
+            console.log(address);
             if (address > this.maxMemAddr) this.maxMemAddr = address;
         };
     };
