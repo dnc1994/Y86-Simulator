@@ -18,10 +18,16 @@
     </head>
 
     <body>
+        <div id="code_box">
+            <div id="code_box_content">
+                <!--<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>-->
+            </div>
+        </div>
+
         <div id="drop_area" class="drop_area"></div>
 
         <div id="controller" class="header">
-            <div id="status">Nothing Loaded.</div>
+            <span id="status">Nothing Loaded.</span>
             <button id="prev">Prev</button>
             <button id="pause">Pause</button>
             <button id="start">Start</button>
@@ -244,8 +250,8 @@
             <div id="mem_monitor" class="block mem_monitor">
                 <div id="mem_monitor_title" class="block_title">Memory</div>
                 <div id="mem_list" class="mem_block">
-                    <div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>EBP</div>
-                    <div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>ESP</div>
+                    <div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div>
+                    <div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>
                 </div>
             </div>
         </div>
@@ -303,10 +309,6 @@
                 saveResult();
             });
 
-            $('#status').click(function(){
-               return;
-            });
-
             $(document).keydown(function(e) {
                 if (e.keyCode == 37) lastStep(); // Left
                 else if (e.keyCode == 39) nextStep(); // Right
@@ -351,6 +353,8 @@
 
                                 reader.onloadend = function(event) {
                                     if (event.target.readyState == FileReader.DONE) {
+                                        $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>');
+
                                         //console.log(fHandle.name.slice(-3));
                                         if (fHandle.name.slice(-3) == '.yo')
                                             YOLoader(event.target.result, fHandle.name);
@@ -409,7 +413,34 @@
             window.stopTimer = function() {
                 if (window.clockTimer) window.clearInterval(window.clockTimer);
                 window.clockTimer = undefined;
-            }
+            };
+
+            window.renderCode = function(Data) {
+                var container = $('<ol></ol>');
+                Data.replace(/ /g, '&nbsp;').split('\n').forEach(function (lineCode) {
+                    container.append($('<li></li>').html(lineCode));
+                });
+                $('#code_box_content').append(container);
+            };
+
+            $('body').on('click', '#status', function (){
+                if (!window.YOLoaded) return;
+                $('#code_box').addClass('show');
+            });
+
+            $('body').on('click', '#code_box_close', function (){
+                $('#code_box').removeClass('show');
+            });
+
+            $('body').on('click', '#code_box_save', function () {
+                saveAs(
+                    new Blob(
+                        [YOData],
+                        {type: "text/plain;charset=utf-8"}
+                    ),
+                    window.YOName
+                );
+            });
         </script>
     </body>
 </html>

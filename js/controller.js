@@ -62,13 +62,15 @@
 
         $('#save_filename').val(fileName.slice(0, -3));
         window.maxMemListAddr = -4;
-        $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span>ESP</div>');
+        $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>');
 
         VM.CPU = new CPU();
 
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
         window.YOLoaded = true;
+        renderCode(YOData);
+        $('#status').addClass('status_loaded');
         APlay('wolai');
     };
 

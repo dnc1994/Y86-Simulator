@@ -225,9 +225,12 @@
         return result;
     };
 
+    window.YSLoaded = false;
+
     // YS Assembler
     window.YSLoader = function(data, filename) {
         console.log('YSLoader Triggered.');
+        window.YSLoaded = false;
         window.YOLoaded = false;
         window.YOData = '';
         window.YOData = '';
@@ -355,7 +358,9 @@
             result[i] = part + pad + '| ' + line[2];
         }
 
-        console.log(result.join('\n'));
+        window.YSLoaded = true;
+        renderCode(YSData);
+        $('#code_box_title p').append($('<button id="code_box_save">Save .yo file</button>'))
 
         // 汇编结束, 调用 YOLoader 载入汇编得到的 YO 文件
         YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true);
