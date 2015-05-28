@@ -197,3 +197,52 @@ html, body {
 #code_box.show #code_box_content {
     top: 10%;
 }
+
+#perf_box {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.5);
+    transition: all .3s ease;
+    z-index: 1;
+}
+
+#perf_box_content {
+    position: absolute;
+    top: 5%;
+    left: 10%;
+    width: 80%;
+    height: 90%;
+    transition: all .3s ease;
+    background-color: #ffffff;
+    overflow: scroll;
+    text-align: center;
+}
+
+#perf_box_title {
+    height: 30px;
+    text-align: center;
+}
+
+#perf_box_title button {
+    float:right;
+}
+
+#perf_table #perf_canvas {
+    left: 5%;
+}
+
+#perf_box.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.tg  {border-collapse:collapse;border-spacing:0;border-color:#aabcfe;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#669;background-color:#e8edff;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#039;background-color:#ffffff;}
+.tg .tg-vyw9{font-family:"Courier New", Courier, monospace !important;}
+.tg .tg-vc88{font-weight:bold;font-family:"Courier New", Courier, monospace !important;}

@@ -206,8 +206,12 @@
         // 更新运行状态显示
         $('#stat').html(VM.CPU.getStat());
         $('#instruction').html(VM.CPU.getInstruction());
-        $('#cycle').html(VM.CPU.getCycle());
-        $('#CPI').html(VM.CPU.getCPI());
+        var nCycle= VM.CPU.getCycle();
+        var vCPI = VM.CPU.getCPI();
+        $('#cycle').html(nCycle);
+        $('#CPI').html(vCPI);
+        window.CPIcycles[nCycle] = nCycle;
+        window.CPIvalues[nCycle] = vCPI;
         $('#ZF').html(+VM.CPU.getZF());
         $('#SF').html(+VM.CPU.getSF());
         $('#OF').html(+VM.CPU.getOF());
@@ -257,7 +261,6 @@
                 $Node.parent().finish();
                 var curColor = $Node.parent().css("background-color");
                 $Node.parent().css("background-color", "#88FF88").animate({backgroundColor: curColor}, 500);
-                APlay('biu');
             }
         }
 

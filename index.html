@@ -12,6 +12,7 @@
         <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
         <script language="javascript" src="./js/jquery.min.js"></script>
         <script language="javascript" src="./js/jquery-bganimate.min.js"></script>
+        <script language="javascript" src="./js/Chart.js"></script>
         <script language="javascript" src="./js/FileSaver.js"></script>
         <script language="javascript" src="./js/constants.js"></script>
         <script language="javascript" src="./js/utils.js"></script>
@@ -26,6 +27,14 @@
         <div id="code_box">
             <div id="code_box_content">
                 <!--<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>-->
+            </div>
+        </div>
+
+        <div id="perf_box">
+            <div id="perf_box_content">
+                <div id="perf_box_title"><p>Performance Analysis<button id="perf_box_close">Close</button></p></div>
+                <div id="perf_table" width="400" height="200"></div>
+                <canvas id="perf_canvas" width="900" height="600"></canvas>
             </div>
         </div>
 
@@ -264,6 +273,7 @@
         <div id="bottom_bar" class="footer">
             Filename: <input type="text" id="save_filename" placeholder="filename" style="width: 100px" />.txt
             <button id="save">Save</button>
+            <button id="perf">Perf Analysis</button>
         </div>
 
         <!-- 交互事件的绑定 -->
@@ -345,7 +355,7 @@
                 }
                 updateDisplay(VM.CPU.getInput());
                 return true;
-            }
+            };
 
             // 步退
             var lastStep = function() {
@@ -354,13 +364,13 @@
                 if(lastCycle < 0) return;
                 YOReload();
                 doStep(lastCycle);
-            }
+            };
 
             // 快进多步
             var doStep = function(cycleNum) {
                 for (var i = 0; i < cycleNum; ++ i) VM.CPU.tick();
                 updateDisplay(VM.CPU.getInput());
-            }
+            };
 
             // 更新监视的内存值
             $('#mem_addr').change(function() {
@@ -393,18 +403,18 @@
             });
 
             // 保存运行结果
-            $('#save').click(function(){
+            $('#save').click(function() {
                 saveResult();
             });
 
             // 显示代码窗口
-            $('body').on('click', '#status', function (){
+            $('body').on('click', '#status', function () {
                 if (!window.YOLoaded) return;
                 $('#code_box').addClass('show');
             });
 
             // 关闭代码窗口
-            $('body').on('click', '#code_box_close', function (){
+            $('body').on('click', '#code_box_close', function () {
                 $('#code_box').removeClass('show');
             });
 
@@ -412,6 +422,40 @@
             $('body').on('click', '#code_box_save', function () {
                 saveAssembleResult();
             });
+
+            // 生成性能分析
+            $('#perf').click(function(){
+                genChart();
+                genTable();
+                $('#perf_box').addClass('show');
+            });
+
+            $('#perf_box_close').click(function() {
+                $('#perf_box').removeClass('show');
+            });
+
+            window.genChart = function() {
+                var data = {
+                    labels : window.CPIcycles,
+                    datasets : [
+                        {
+                            fillColor : "rgba(220,220,220,0.5)",
+                            strokeColor : "rgba(220,220,220,1)",
+                            pointColor : "rgba(220,220,220,1)",
+                            pointStrokeColor : "#fff",
+                            data : window.CPIvalues,
+                        }
+                    ]
+                };
+                console.log(data);
+                var ctx = $('#perf_canvas').get(0).getContext("2d");
+                var nChart = new Chart(ctx).Line(data);
+            };
+
+            window.genTable = function() {
+                window.VM.CPU.getCPI(true);
+                $('#perf_table').html(window.table_html);
+            }
 
         </script>
     </body>

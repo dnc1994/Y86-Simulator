@@ -172,6 +172,9 @@
         var count_mrmovl = 0, count_popl = 0, count_load_use = 0;
         var count_cond_branch = 0, count_mispredict = 0;
         var count_ret = 0;
+        // 记录CPI用于绘图
+        window.CPIcycles = [0];
+        window.CPIvalues = ['1.000'];
 
         window.alu = new ALU();
 
@@ -307,7 +310,7 @@
             if (input.E_icode == CONST.I_MRMOVL) ++ count_mrmovl;
             if (input.E_icode == CONST.I_POPL) ++ count_popl;
             if (input.E_icode == CONST.I_JXX) ++ count_cond_branch;
-            //if (input.E_icode == CONST.I_RET) ++ count_ret;
+            if (input.E_icode == CONST.I_RET) ++ count_ret;
 
             // alu.inputA
             if (input.E_icode == CONST.I_HALT && input.E_stat != CONST.S_BUB) {
@@ -404,19 +407,19 @@
 
             var E_bubble = (input.E_icode == CONST.I_JXX && !output.M_Bch)
                 || (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1
-                && [output.E_srcA, output.E_srcB].indexOf(input.E_dstM) != -1));
+                    && [output.E_srcA, output.E_srcB].indexOf(input.E_dstM) != -1));
 
             var M_bubble = [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(output.W_stat) != -1
                 || [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(input.W_stat) != -1;
 
+            // 统计
             if (([CONST.I_MRMOVL, CONST.I_POPL].indexOf(input.E_icode) != -1) &&
                 (input.E_dstM == input.E_srcA || input.E_dstM == input.E_srcB)) ++ count_load_use;
 
-            if (input.E_icode = CONST.I_JXX && !input.M_Bch) ++ count_mispredict;
-
-            if ([input.D_icode, input.E_icode, input.M_icode].indexOf(CONST.I_RET) != -1) ++ count_ret;
-
-            // Then write Regs from input to output.
+            if (input.E_icode == CONST.I_JXX && !input.M_Bch) {
+                console.log('mispredict ' + VM.CPU.getCycle());
+                ++ count_mispredict;
+            }
 
             var newInput = new PipelineRegisters(output);
 
@@ -488,7 +491,8 @@
             return instruction;
         };
 
-        this.getCPI = function() {
+        this.getCPI = function(genTable) {
+            if (typeof genTable == 'undefined') genTable = false;
             var ins_freq = {
                 lp : !instruction ? 0: (count_mrmovl + count_popl) / instruction,
                 mp : !instruction ? 0: count_cond_branch / instruction,
@@ -505,10 +509,16 @@
             var mp = ins_freq["mp"] * cond_freq["mp"] * 2;
             var rp = ins_freq["rp"] * cond_freq["rp"] * 3;
 
-            /*console.log(ins_freq);
+            /*
+            console.log('Cycle ' + this.getCycle());
+            console.log(ins_freq);
             console.log(cond_freq);
-            console.log(1.0 + lp + mp + rp);*/
+            console.log(1.0 + lp + mp + rp);
+            */
 
+            // 生成性能分析表格
+            if (genTable)
+                window.table_html = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"] + '</td><td class="tg-vyw9">' + cond_freq["lp"] + '</td><td class="tg-031e">1</td><td class="tg-vyw9">' + ins_freq["lp"] * cond_freq["lp"] + '</td></tr><tr><td class="tg-vyw9">Mispredict)</td><td class="tg-vyw9">' + ins_freq["mp"] + '</td><td class="tg-vyw9">' + cond_freq["mp"] + '</td><td class="tg-031e">2</td><td class="tg-vyw9">' + ins_freq["mp"] * cond_freq["mp"] * 2 + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"] + '</td><td class="tg-vyw9">' + cond_freq["rp"] + '</td><td class="tg-031e">3</td><td class="tg-vyw9">' + ins_freq["rp"] * cond_freq["rp"] * 3 + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-031e"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
             return (1.0 + lp + mp + rp).toFixed(3);
         };
 
