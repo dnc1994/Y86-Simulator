@@ -13,6 +13,8 @@
     };
 
     window.assert = function(bool) {
+        //console.log('assert triggerd by ' + assert.caller.toString().slice(0, 30));
+        //console.log('value to assert: ' + bool);
         if (typeof bool == 'undefined') throw new AssertError("Assertion failed. Result is undefined.");
         if (bool === false) throw new AssertError("Assertion failed. Result is false.");
         if (bool === null) throw new AssertError("Assertion failed. Result is null.");
@@ -29,7 +31,7 @@
     };
 
     window.isInt = function(n) {
-        return typeof n == 'number' && n % 1 == 0;
+        return typeof n == 'number' && n % 1 == 0 && n >= -2147483648 && n < 4294967296;
     };
 
     window.isSigned = function(n) {

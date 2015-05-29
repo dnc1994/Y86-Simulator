@@ -138,6 +138,10 @@ html, body {
     color: navy;
 }
 
+#none_ptr {
+    opacity: 0;
+}
+
 #code_box {
     position: fixed;
     height: 100%;
@@ -241,8 +245,17 @@ html, body {
     pointer-events: all;
 }
 
-.tg  {border-collapse:collapse;border-spacing:0;border-color:#aabcfe;}
+.tg {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border-color: #aabcfe;
+    margin: auto;
+}
+
 .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#669;background-color:#e8edff;}
+
 .tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#039;background-color:#ffffff;}
+
 .tg .tg-vyw9{font-family:"Courier New", Courier, monospace !important;}
+
 .tg .tg-vc88{font-weight:bold;font-family:"Courier New", Courier, monospace !important;}

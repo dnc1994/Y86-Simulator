@@ -47,7 +47,7 @@
             <button id="start">Start</button>
             <button id="next">Next</button>
             <button id="reset">Reset</button>
-            Frequency: <input type="text" maxlength="3" id="freq" size="5" value="5" /> Hz
+            Frequency: <input type="text" maxlength="3" id="freq" size="5" value="50" /> Hz
             <input type="text" maxlength="10" placeholder="Mem Addr" id="mem_addr" size="15" />
         </div>
 
@@ -125,16 +125,16 @@
                     <div class="entry_content" id="E_ifun">0</div>
                 </div>
                 <div class="entry_block">
+                    <div class="entry_title">valC</div>
+                    <div class="entry_content" id="E_valC">0x00000000</div>
+                </div>
+                <div class="entry_block">
                     <div class="entry_title">valA</div>
                     <div class="entry_content" id="E_valA">0x00000000</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">valB</div>
                     <div class="entry_content" id="E_valB">0x00000000</div>
-                </div>
-                <div class="entry_block">
-                    <div class="entry_title">valC</div>
-                    <div class="entry_content" id="E_valC">0x00000000</div>
                 </div>
                 <div class="entry_block">
                     <div class="entry_title">dstE</div>
@@ -276,6 +276,8 @@
             <button id="perf">Perf Analysis</button>
         </div>
 
+        <div id="none_ptr">Now you see me? Soon you won't</div>
+
         <!-- 交互事件的绑定 -->
         <script language="javascript">
 
@@ -350,6 +352,7 @@
                     VM.CPU.tick();
                 }
                 catch (e) {
+                    console.log(e);
                     window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }

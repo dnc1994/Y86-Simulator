@@ -157,7 +157,7 @@
         //console.log(list, args, symbols);
         var item, result = {};
 
-        for (i in list) {
+        for (var i in list) {
             item = list[i];
             if (item === 'rA') {
                 result['rA'] = getRegCode(args[i]);

@@ -26,32 +26,52 @@
 
         // 分配 block
         var allocateMemBlock = function(address) {
+            //console.log('allocateMemBlock: ' + address);
             assert(isInt(address));
+            address = toUnsigned(address);
+
             var highAddr = address >>> 16;
             if(allocatedBlocks >= container.size) {
                 throw new VMOutOfMemoryException("Virtual Machine runs out of memory!");
             }
             container[mapping[highAddr] = allocatedBlocks] = new Int8Array(65536);
+            // 初始化本页内存为 0xCC
+            for (var i in container[allocatedBlocks])
+                container[allocatedBlocks][i] = 0xCC;
             ++ allocatedBlocks;
         };
 
         this.readByte = function(address) {
-            assert(isUnsigned(address));
+            //console.log('readByte: ' + address);
+            assert(isInt(address));
+            address = toUnsigned(address);
+
             var highAddr = address >>> 16, lowAddr = address & 65535;
             if (typeof mapping[highAddr] == 'undefined') return 0;
             return container[mapping[highAddr]][lowAddr] & 255;
         };
 
         this.readUnsigned = function(address) {
+            //console.log('readUnsigned: ' + address);
+            assert(isInt(address));
+            address = toUnsigned(address);
+
             return this.readByte(address) + ( this.readByte(address + 1) * 256 ) + ( this.readByte(address + 2) * 65536) + ( this.readByte(address + 3) * 16777216);
         };
 
         this.readInt = function(address) {
+            //console.log('readInt: ' + address);
+            assert(isInt(address));
+            address = toUnsigned(address);
+
             return this.readUnsigned(address) | 0;
         };
 
         this.writeByte = function(address, val) {
-            assert(isUnsigned(address) && isInt(val) && val < 256 && val >= 0);
+            //console.log('writeByte: ' + address + ' <- ' + val);
+            assert(isInt(address));
+            address = toUnsigned(address);
+            assert(isInt(val) && val < 256 && val >= 0);
 
             var highAddr = address >>> 16, lowAddr = address & 65535;
             if (typeof mapping[highAddr] == 'undefined') allocateMemBlock(address);
@@ -61,6 +81,7 @@
         };
 
         this.writeInt = function(address, val) {
+            //console.log('writeInt: ' + address + ' <- ' + val);
             assert(isInt(address));
             address = toUnsigned(address);
             val = toUnsigned(val);

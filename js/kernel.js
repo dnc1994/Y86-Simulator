@@ -65,7 +65,7 @@
         };
 
         Calc[CONST.A_XOR] = function() {
-            tval = inputA ^ inputB;
+            tVal = inputA ^ inputB;
             if (needUpCC) updateCC();
         };
 
@@ -329,14 +329,16 @@
 
             // alu.inputB
             if ([CONST.I_RMMOVL, CONST.I_MRMOVL, CONST.I_OPL, CONST.I_CALL,
-                CONST.I_PUSHL, CONST.I_RET, CONST.I_POPL, CONST.I_IADDL].indexOf(input.E_icode) != -1)
+                CONST.I_PUSHL, CONST.I_RET, CONST.I_POPL].indexOf(input.E_icode) != -1)
                 alu.setInputB(input.E_valB);
             else alu.setInputB(0);
 
             // alu.Fcode
             if (input.E_icode == CONST.I_OPL)
                 alu.setFcode(input.E_ifun);
-            else alu.setFcode(0);
+            // ??
+            else
+                alu.setFcode(0);
 
             // alu.setCC
             if ([CONST.I_OPL].indexOf(input.E_icode) != -1
@@ -347,6 +349,7 @@
                 alu.setNeedUpCC(false);
 
             output.M_valE = alu.run();
+            //console.log('M_val calc by ALU: ' + Eoutput.M_valE);
             // E_icode != CONST.I_JXX 时 M_Bch 的值不影响流水线
             //output.M_Bch = input.E_icode != CONST.I_JXX ? 0 : alu.getCnd(input.E_ifun);
             output.M_Bch = alu.getCnd(input.E_ifun);
@@ -417,7 +420,7 @@
                 (input.E_dstM == input.E_srcA || input.E_dstM == input.E_srcB)) ++ count_load_use;
 
             if (input.E_icode == CONST.I_JXX && !input.M_Bch) {
-                console.log('mispredict ' + VM.CPU.getCycle());
+                //console.log('mispredict ' + VM.CPU.getCycle());
                 ++ count_mispredict;
             }
 
@@ -518,7 +521,7 @@
 
             // 生成性能分析表格
             if (genTable)
-                window.table_html = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"] + '</td><td class="tg-vyw9">' + cond_freq["lp"] + '</td><td class="tg-031e">1</td><td class="tg-vyw9">' + ins_freq["lp"] * cond_freq["lp"] + '</td></tr><tr><td class="tg-vyw9">Mispredict)</td><td class="tg-vyw9">' + ins_freq["mp"] + '</td><td class="tg-vyw9">' + cond_freq["mp"] + '</td><td class="tg-031e">2</td><td class="tg-vyw9">' + ins_freq["mp"] * cond_freq["mp"] * 2 + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"] + '</td><td class="tg-vyw9">' + cond_freq["rp"] + '</td><td class="tg-031e">3</td><td class="tg-vyw9">' + ins_freq["rp"] * cond_freq["rp"] * 3 + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-031e"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
+                window.table_html = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["lp"].toFixed(3) + '</td><td class="tg-031e">1</td><td class="tg-vyw9">' + (ins_freq["lp"] * cond_freq["lp"]).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Mispredict</td><td class="tg-vyw9">' + ins_freq["mp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["mp"].toFixed(3) + '</td><td class="tg-031e">2</td><td class="tg-vyw9">' + (ins_freq["mp"] * cond_freq["mp"] * 2).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["rp"].toFixed(3) + '</td><td class="tg-031e">3</td><td class="tg-vyw9">' + (ins_freq["rp"] * cond_freq["rp"] * 3).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-031e"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
             return (1.0 + lp + mp + rp).toFixed(3);
         };
 

@@ -266,14 +266,17 @@
 
         // 修正当前最大有效地址
         var m = VM.M.maxMemAddr, b = VM.R.R_EBP, s = VM.R.R_ESP, r = m % 4;
+        //console.log(m, b, s, r);
         m -= !r ? 0 : r;
         if (b > m) m = b;
         if (s > m) m = s;
-        VM.M.maxMemAddr = m;
-        //console.log(window.maxMemListAddr, VM.M.maxMemAddr);
+        VM.M.maxMemAddr = Math.min(m, 1024);
+
+        //console.log('maxMem', window.maxMemListAddr, VM.M.maxMemAddr);
 
         // 更新内存显示
         for (var addr = 0; addr <= window.maxMemListAddr; addr += 4) {
+            //console.log('addr: ' + addr);
             var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
             //console.log('memchange: ' + addr + ' -> ' + val);
             $('#memval_' + addr).text(val);
@@ -282,6 +285,7 @@
         // 创建新内存显示单元
         if (window.maxMemListAddr < VM.M.maxMemAddr) {
             for (var addr = window.maxMemListAddr + 4; addr <= VM.M.maxMemAddr; addr += 4) {
+                //console.log('addr: ' + addr);
                 var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
                 var addrID = 'memaddr_' + addr.toString();
                 var valID = 'memval_' + addr.toString();
@@ -293,8 +297,11 @@
         window.maxMemListAddr = VM.M.maxMemAddr;
 
         // 更新 %ebp %esp 指针显示
-        var ebp = '#memaddr_' + VM.R.R_EBP;
-        var esp = '#memaddr_' + VM.R.R_ESP;
+        var ebp = toUnsigned(VM.R.R_EBP) > 1024 ? '#none_ptr' : '#memaddr_' + toUnsigned(VM.R.R_EBP);
+        var esp = toUnsigned(VM.R.R_ESP) > 1024 ? '#none_ptr' : '#memaddr_' + toUnsigned(VM.R.R_ESP);
+        // 出于前端性能考虑只显示前 1024 位内存
+        if (ebp == '#none_ptr' || esp == '#none_ptr') return;
+        //console.log(ebp, esp);
         $('#ebp_ptr').css('top', $(ebp)[0].offsetTop + 'px');
         $('#esp_ptr').css('top', $(esp)[0].offsetTop + 'px');
         $('#mem_monitor').finish();
