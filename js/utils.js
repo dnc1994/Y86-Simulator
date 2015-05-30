@@ -13,7 +13,7 @@
     };
 
     window.assert = function(bool) {
-        //console.log('assert triggerd by ' + assert.caller.toString().slice(0, 30));
+        //console.log('assert triggerd by ' + assert.caller.toString().slice(0, 100));
         //console.log('value to assert: ' + bool);
         if (typeof bool == 'undefined') throw new AssertError("Assertion failed. Result is undefined.");
         if (bool === false) throw new AssertError("Assertion failed. Result is false.");
@@ -31,7 +31,8 @@
     };
 
     window.isInt = function(n) {
-        return typeof n == 'number' && n % 1 == 0 && n >= -2147483648 && n < 4294967296;
+        //console.log('isInt ' + n);
+        return typeof n == 'number' && n % 1 == 0;
     };
 
     window.isSigned = function(n) {
@@ -48,6 +49,7 @@
     };
 
     window.toUnsigned = function(n) {
+        //console.log('toUnsigned' + n);
         assert(isInt(n));
         return n >>> 0;
     };
@@ -64,6 +66,7 @@
 
     // 转换并填充为 len 位 16 进制字符串
     window.padHex = function(data, len) {
+        //console.log('padHex ' + data);
         if (typeof len === 'undefined') len = 8;
         data = parseInt(data);
         data = toUnsigned(data);
@@ -85,4 +88,7 @@
         return result;
 
     };
+
+    window.toBigEndian = toLittleEndian;
+
 })();

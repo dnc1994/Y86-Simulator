@@ -19,31 +19,34 @@
             alert('Nothing loaded :(');
             return;
         }
-        YOLoader(window.YOData, window.YOName, needUpdate);
+        YOLoader(window.YOData, window.YOName, needUpdate, false);
     };
 
     window.YOLoaded = false;
 
     // YO Parser
-    window.YOLoader = function(data, fileName, needUpdate) {
+    window.YOLoader = function(data, fileName, needUpdate, needPreRun) {
         console.log("YOLoader triggered.");
+
+        if (typeof preRun == 'undefined') preRun = false;
 
         window.YOData = data;
         window.YOName = fileName;
         window.VM.M = new Memory();
         window.VM.R = new Registers();
+        window.VM.C = new Cache();
 
         var lines = data.split("\n");
 
-        var pattern = /^\s*0x([0-9a-f]+)\s*:(?:\s*)([0-9a-f]*)\s*(?:\|(?:.*))$/i;
-        var empty_pattern = /^\s*((?:\|).*)?$/;
+        var insPattern = /^\s*0x([0-9a-f]+)\s*:(?:\s*)([0-9a-f]*)\s*(?:\|(?:.*))$/i;
+        var emptyPattern = /^\s*((?:\|).*)?$/;
         try {
             for (var i = 0; i < lines.length; ++ i) {
                 lines[i] = $.trim(lines[i]);
-                if (empty_pattern.test(lines[i]))
+                if (emptyPattern.test(lines[i]))
                     continue;
 
-                var match = pattern.exec(lines[i]);
+                var match = insPattern.exec(lines[i]);
                 if (match == null)
                     throw new YOSyntaxError(i);
                 if (match[2].length % 2 == 1)
@@ -72,16 +75,13 @@
         VM.CPU = new CPU();
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
+
+        if (needPreRun) preRun();
     };
 
-    // 输出运行结果
-    window.saveResult = function() {
-        if (!YOLoaded) {
-            alert('Nothing loaded :(');
-            return;
-        }
+    window.maxCycle = 0;
 
-        YOReload(false);
+    window.preRun = function() {
         var result = '';
         var nCycle = 0;
 
@@ -129,18 +129,28 @@
 
             try {
                 VM.CPU.tick();
-                ++ nCycle;
+                window.maxCycle = ++ nCycle;
             }
             catch (e) {
                 break;
             }
         }
 
+        window.runResult = result;
+
         YOReload(false);
+    };
+
+    // 输出运行结果
+    window.saveResult = function() {
+        if (!YOLoaded) {
+            alert('Nothing loaded :(');
+            return;
+        }
 
         saveAs(
             new Blob(
-                [result],
+                [window.runResult],
                 {type: "text/plain;charset=utf-8"}
             ),
             ($('#save_filename').val()) + ".txt"
@@ -210,6 +220,8 @@
         var vCPI = VM.CPU.getCPI();
         $('#cycle').html(nCycle);
         $('#CPI').html(vCPI);
+        $('#cache_hit').html(VM.C.countCacheHit);
+        $('#cache_miss').html(VM.C.countCacheMiss);
         window.CPIcycles[nCycle] = nCycle;
         window.CPIvalues[nCycle] = vCPI;
         $('#ZF').html(+VM.CPU.getZF());
@@ -285,7 +297,7 @@
         // 创建新内存显示单元
         if (window.maxMemListAddr < VM.M.maxMemAddr) {
             for (var addr = window.maxMemListAddr + 4; addr <= VM.M.maxMemAddr; addr += 4) {
-                //console.log('addr: ' + addr);
+                //console.log('creating elem for addr: ' + addr);
                 var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
                 var addrID = 'memaddr_' + addr.toString();
                 var valID = 'memval_' + addr.toString();
@@ -310,6 +322,35 @@
         }, 300);
     };
 
+    window.genChart = function() {
+        var data = {
+            labels : window.CPIcycles,
+            datasets : [
+                {
+                    fillColor : "rgba(220,220,220,0.5)",
+                    strokeColor : "rgba(220,220,220,1)",
+                    pointColor : "rgba(220,220,220,1)",
+                    pointStrokeColor : "#fff",
+                    data : window.CPIvalues
+                }
+            ]
+        };
+        var ctx = $('#perf_canvas').get(0).getContext("2d");
+        var nChart = new Chart(ctx).Line(data);
+    };
+
+    window.genTable = function() {
+        window.VM.CPU.getCPI(true);
+
+        var hit = VM.C.countCacheHit, miss = VM.C.countCacheMiss;
+        var total = hit + miss;
+        var p_hit = ((hit / total) * 100).toFixed(1);
+        var p_miss = (100 - p_hit).toFixed(1);
+        window.cache_table = '<table class="tg"><tr><th class="tg-vc88">Hit/Miss</th><th class="tg-vc88">Count</th><th class="tg-vc88">Percentage</th></tr><tr><td class="tg-vyw9">Hit</td><td class="tg-vyw9">' + hit + '</td><td class="tg-vyw9">' + p_hit + '%</td></tr><tr><td class="tg-vyw9">Miss</td><td class="tg-vyw9">' + miss + '</td><td class="tg-vyw9">' + p_miss + '%</td></tr><tr><td class="tg-031e">Total</td><td class="tg-031e">' + total + '</td><td class="tg-031e"></td></tr></table>';
+
+        $('#perf_hazard_table').html(window.hazard_table);
+        $('#perf_cache_table').html(window.cache_table);
+    };
 
     window.APlay = function(filename, mute){
         if (typeof mute === 'undefined') mute = 0;

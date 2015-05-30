@@ -236,7 +236,14 @@ html, body {
     float:right;
 }
 
-#perf_table #perf_canvas {
+#perf_table {
+    display: inline-block;
+}
+
+#perf_hazard_table #perf_cache_table #perf_canvas {
+    display: inline-block;
+    position:absolute;
+    margin-top: 10px;
     left: 5%;
 }
 
@@ -250,6 +257,7 @@ html, body {
     border-spacing: 0;
     border-color: #aabcfe;
     margin: auto;
+    margin-top: 15px;
 }
 
 .tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#669;background-color:#e8edff;}

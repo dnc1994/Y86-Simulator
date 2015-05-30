@@ -7,7 +7,8 @@
 
     window.VM = {
         M : new Memory(),
-        R : new Registers()
+        R : new Registers(),
+        C : new Cache()
     };
 
     var ALU = function() {
@@ -175,13 +176,14 @@
         // 记录CPI用于绘图
         window.CPIcycles = [0];
         window.CPIvalues = ['1.000'];
+        window.CacheStat = [0, 0];
 
         window.alu = new ALU();
 
         var fetch = function () {
             if (hlt_flag) return;
 
-            nextPC = input.F_predPC;
+            var nextPC = input.F_predPC;
             if (input.M_icode == CONST.I_JXX && !input.M_Bch)
                 nextPC = input.M_valA;
             else if (input.W_icode == CONST.I_RET)
@@ -379,6 +381,7 @@
             memWrite = [CONST.I_RMMOVL, CONST.I_PUSHL, CONST.I_CALL].indexOf(input.M_icode) != -1;
 
             if (memRead) output.W_valM = VM.M.readInt(memAddr);
+            //console.log('memAddr: ' + memAddr);
             if (memWrite)
                 try {
                     VM.M.writeInt(memAddr, input.M_valA);
@@ -521,7 +524,7 @@
 
             // 生成性能分析表格
             if (genTable)
-                window.table_html = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["lp"].toFixed(3) + '</td><td class="tg-031e">1</td><td class="tg-vyw9">' + (ins_freq["lp"] * cond_freq["lp"]).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Mispredict</td><td class="tg-vyw9">' + ins_freq["mp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["mp"].toFixed(3) + '</td><td class="tg-031e">2</td><td class="tg-vyw9">' + (ins_freq["mp"] * cond_freq["mp"] * 2).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["rp"].toFixed(3) + '</td><td class="tg-031e">3</td><td class="tg-vyw9">' + (ins_freq["rp"] * cond_freq["rp"] * 3).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-031e"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
+                window.hazard_table = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["lp"].toFixed(3) + '</td><td class="tg-031e">1</td><td class="tg-vyw9">' + (ins_freq["lp"] * cond_freq["lp"]).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Mispredict</td><td class="tg-vyw9">' + ins_freq["mp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["mp"].toFixed(3) + '</td><td class="tg-031e">2</td><td class="tg-vyw9">' + (ins_freq["mp"] * cond_freq["mp"] * 2).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["rp"].toFixed(3) + '</td><td class="tg-031e">3</td><td class="tg-vyw9">' + (ins_freq["rp"] * cond_freq["rp"] * 3).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-031e"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
             return (1.0 + lp + mp + rp).toFixed(3);
         };
 

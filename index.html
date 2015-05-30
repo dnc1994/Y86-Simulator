@@ -16,8 +16,9 @@
         <script language="javascript" src="./js/FileSaver.js"></script>
         <script language="javascript" src="./js/constants.js"></script>
         <script language="javascript" src="./js/utils.js"></script>
-        <script language="javascript" src="./js/memory.js"></script>
         <script language="javascript" src="./js/registers.js"></script>
+        <script language="javascript" src="./js/memory.js"></script>
+        <script language="javascript" src="./js/cache.js"></script>
         <script language="javascript" src="./js/kernel.js"></script>
         <script language="javascript" src="./js/assembler.js"></script>
         <script language="javascript" src="./js/controller.js"></script>
@@ -33,8 +34,11 @@
         <div id="perf_box">
             <div id="perf_box_content">
                 <div id="perf_box_title"><p>Performance Analysis<button id="perf_box_close">Close</button></p></div>
-                <div id="perf_table" width="400" height="200"></div>
-                <canvas id="perf_canvas" width="900" height="600"></canvas>
+                <div id="perf_table">
+                    <div id="perf_hazard_table" width="400" height="200"></div>
+                    <div id="perf_cache_table" width="400" height="200"></div>
+                </div>
+                <canvas id="perf_canvas" width="1000" height="600"></canvas>
             </div>
         </div>
 
@@ -59,6 +63,10 @@
                     <div class="entry_content" id="F_predPC">0x00000000</div>
                 </div>
                 <div class="entry_block">
+                    <div class="entry_title"></div>
+                    <div class="entry_content"></div>
+                </div>
+                <div class="entry_block">
                     <div class="entry_title">STAT</div>
                     <div class="entry_content" id="stat">S_AOK</div>
                 </div>
@@ -77,6 +85,14 @@
                 <div class="entry_block">
                     <div class="entry_title">CPI</div>
                     <div class="entry_content" id="CPI">1.0</div>
+                </div>
+                <div class="entry_block">
+                    <div class="entry_title">Cache Hit</div>
+                    <div class="entry_content" id="cache_hit">0</div>
+                </div>
+                <div class="entry_block">
+                    <div class="entry_title">Cache Miss</div>
+                    <div class="entry_content" id="cache_miss">0</div>
                 </div>
             </div>
             <div id="decode" class="block decode">
@@ -321,9 +337,9 @@
                                     // 创建代码窗口
                                     $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>');
                                     if (fHandle.name.slice(-3) == '.yo')
-                                        YOLoader(event.target.result, fHandle.name);
+                                        YOLoader(event.target.result, fHandle.name, true, true);
                                     else if (fHandle.name.slice(-3) == '.ys')
-                                        YSLoader(event.target.result, fHandle.name);
+                                        YSLoader(event.target.result, fHandle.name, true);
                                     else
                                         alert('Unsupported file type!');
                                 }
@@ -352,7 +368,7 @@
                     VM.CPU.tick();
                 }
                 catch (e) {
-                    console.log(e);
+                    console.log('Cache STAT', VM.C.countCacheHit, VM.C.countCacheMiss);
                     window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }
@@ -428,6 +444,10 @@
 
             // 生成性能分析
             $('#perf').click(function(){
+                if (VM.CPU.getCycle() != window.maxCycle) {
+                    alert('Please first run through the end before viewing performance analysis!');
+                    return;
+                }
                 genChart();
                 genTable();
                 $('#perf_box').addClass('show');
@@ -436,29 +456,6 @@
             $('#perf_box_close').click(function() {
                 $('#perf_box').removeClass('show');
             });
-
-            window.genChart = function() {
-                var data = {
-                    labels : window.CPIcycles,
-                    datasets : [
-                        {
-                            fillColor : "rgba(220,220,220,0.5)",
-                            strokeColor : "rgba(220,220,220,1)",
-                            pointColor : "rgba(220,220,220,1)",
-                            pointStrokeColor : "#fff",
-                            data : window.CPIvalues,
-                        }
-                    ]
-                };
-                console.log(data);
-                var ctx = $('#perf_canvas').get(0).getContext("2d");
-                var nChart = new Chart(ctx).Line(data);
-            };
-
-            window.genTable = function() {
-                window.VM.CPU.getCPI(true);
-                $('#perf_table').html(window.table_html);
-            }
 
         </script>
     </body>

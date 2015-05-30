@@ -200,7 +200,7 @@
 
     // 对单条指令进行编码
     window.Encode = function(ins, symbols, lineNum) {
-        console.log('Processing instruction:' + ins);
+        //console.log('Processing instruction:' + ins);
 
         var result = '';
         var args = [];
@@ -230,8 +230,10 @@
     window.YSLoaded = false;
 
     // YS Assembler
-    window.YSLoader = function(data, filename) {
+    window.YSLoader = function(data, filename, needPreRun) {
         console.log('YSLoader Triggered.');
+
+        if (typeof needPreRun == 'undefined') needPreRun = false;
 
         window.YSLoaded = false;
         window.YOLoaded = false;
@@ -371,7 +373,7 @@
         $('#code_box_title p').append($('<button id="code_box_save">Save .yo file</button>'))
 
         // 汇编结束, 调用 YOLoader 载入汇编得到的 YO 文件
-        YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true);
+        YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true, needPreRun);
     }
 
 })();
