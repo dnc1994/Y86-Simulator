@@ -7,46 +7,47 @@
 
     // 指令对应的 icode
     var insCode = {
-        'nop': 0,
-        'halt': 1,
-        'rrmovl': 2,
-        'irmovl': 3,
-        'rmmovl': 4,
-        'mrmovl': 5,
-        'addl': 6,
-        'subl': 6,
-        'andl': 6,
-        'xorl': 6,
-        'jmp': 7,
-        'jle': 7,
-        'jl': 7,
-        'je': 7,
-        'jne': 7,
-        'jge': 7,
-        'jg': 7,
-        'call': 8,
-        'ret': 9,
-        'pushl': 10,
-        'popl': 11
+        'nop' : 0,
+        'halt' : 1,
+        'rrmovl' : 2,
+        'irmovl' : 3,
+        'rmmovl' : 4,
+        'mrmovl' : 5,
+        'addl' : 6,
+        'subl' : 6,
+        'andl' : 6,
+        'xorl' : 6,
+        'jmp' : 7,
+        'jle' : 7,
+        'jl' : 7,
+        'je' : 7,
+        'jne' : 7,
+        'jge' : 7,
+        'jg' : 7,
+        'call' : 8,
+        'ret' : 9,
+        'pushl' : 10,
+        'popl' : 11,
+        'iaddl' : 12
     };
 
     // 指令对应的 ifun
     var insFun = {
-        'addl': 0,
-        'subl': 1,
-        'andl': 2,
-        'xorl': 3,
-        'jmp': 0,
-        'jle': 1,
-        'jl': 2,
-        'je': 3,
+        'addl' : 0,
+        'subl' : 1,
+        'andl' : 2,
+        'xorl' : 3,
+        'jmp' : 0,
+        'jle' : 1,
+        'jl' : 2,
+        'je' : 3,
         'jne': 4,
         'jge': 5,
         'jg': 6,
     };
 
     // 指令对应的长度
-    var insLength = [1, 1, 2, 6, 6, 6, 2, 5, 5, 1, 2, 2];
+    var insLength = [1, 1, 2, 6, 6, 6, 2, 5, 5, 1, 2, 2, 6];
 
     // 指令对应的语法
     var insSyntax = {};
@@ -72,6 +73,7 @@
     insSyntax['ret'] = [];
     insSyntax['pushl'] = ['rA'];
     insSyntax['popl'] = ['rA'];
+    insSyntax['iaddl'] = ['V', 'rB'];
 
     // 寄存器编码对应的名称
     var regName = ['%eax', '%ecx', '%edx', '%ebx', '%esp', '%ebp', '%esi', '%edi'];
@@ -139,6 +141,10 @@
 
     insEncoder[11] = function() {
         return 'b0' + this.rA + '8';
+    };
+
+    insEncoder[12] = function() {
+        return 'c08' + this.rB + pad(this.V);
     };
 
     // 获取寄存器编码
@@ -270,6 +276,9 @@
             if (line == '') continue;
 
             // 行号
+
+            console.log(counter);
+
             result[i][0] = [toHexString(counter, 4)];
 
             // 添加 symbol

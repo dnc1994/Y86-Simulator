@@ -197,7 +197,7 @@
             // 检查是否为非法指令
             if ([CONST.I_NOP, CONST.I_HALT, CONST.I_RRMOVL, CONST.I_IRMOVL, CONST.I_RMMOVL,
                 CONST.I_MRMOVL, CONST.I_OPL, CONST.I_JXX, CONST.I_CALL, CONST.I_RET,
-                CONST.I_PUSHL, CONST.I_POPL].indexOf(output.D_icode) == -1) {
+                CONST.I_PUSHL, CONST.I_POPL, CONST.I_IADDL].indexOf(output.D_icode) == -1) {
                 output.F_stat = output.D_stat = CONST.S_INS;
                 return;
             }
@@ -213,7 +213,7 @@
 
             // 抽取 rA, rB
             if ([CONST.I_RRMOVL, CONST.I_OPL, CONST.I_IRMOVL, CONST.I_MRMOVL,
-                CONST.I_RMMOVL, CONST.I_PUSHL, CONST.I_POPL].indexOf(output.D_icode) != -1) {
+                CONST.I_RMMOVL, CONST.I_PUSHL, CONST.I_POPL, CONST.I_IADDL].indexOf(output.D_icode) != -1) {
                 var regByte = VM.M.readByte(nextPC ++);
                 output.D_rA = regByte >> 4;
                 output.D_rB = regByte & 0xF;
@@ -223,7 +223,7 @@
 
             // 抽取 valC
             if ([CONST.I_IRMOVL, CONST.I_RMMOVL, CONST.I_MRMOVL,
-                CONST.I_JXX, CONST.I_CALL].indexOf(output.D_icode) != -1) {
+                CONST.I_JXX, CONST.I_CALL, CONST.I_IADDL].indexOf(output.D_icode) != -1) {
                 output.D_valC = VM.M.readInt(nextPC);
                 nextPC += 4;
             }
@@ -251,7 +251,7 @@
                 output.E_srcA = CONST.R_NONE;
 
             // output.E_srcB
-            if ([CONST.I_OPL, CONST.I_RMMOVL, CONST.I_MRMOVL].indexOf(input.D_icode) != -1)
+            if ([CONST.I_OPL, CONST.I_RMMOVL, CONST.I_MRMOVL, CONST.I_IADDL].indexOf(input.D_icode) != -1)
                 output.E_srcB = input.D_rB;
             else if ([CONST.I_PUSHL, CONST.I_POPL, CONST.I_CALL, CONST.I_RET].indexOf(input.D_icode) != -1)
                 output.E_srcB = CONST.R_ESP;
@@ -259,7 +259,7 @@
                 output.E_srcB = CONST.R_NONE;
 
             // output.E_dstE
-            if ([CONST.I_RRMOVL, CONST.I_IRMOVL, CONST.I_OPL].indexOf(input.D_icode) != -1)
+            if ([CONST.I_RRMOVL, CONST.I_IRMOVL, CONST.I_OPL, CONST.I_IADDL].indexOf(input.D_icode) != -1)
                 output.E_dstE = input.D_rB;
             else if ([CONST.I_PUSHL, CONST.I_POPL, CONST.I_CALL, CONST.I_RET].indexOf(input.D_icode) != -1)
                 output.E_dstE = CONST.R_ESP;
@@ -321,7 +321,7 @@
             }
             if ([CONST.I_RRMOVL, CONST.I_OPL].indexOf(input.E_icode) != -1)
                 alu.setInputA(input.E_valA);
-            else if ([CONST.I_IRMOVL, CONST.I_RMMOVL, CONST.I_MRMOVL].indexOf(input.E_icode) != -1)
+            else if ([CONST.I_IRMOVL, CONST.I_RMMOVL, CONST.I_MRMOVL, CONST.I_IADDL].indexOf(input.E_icode) != -1)
                 alu.setInputA(input.E_valC);
             else if ([CONST.I_CALL, CONST.I_PUSHL].indexOf(input.E_icode) != -1)
                 alu.setInputA(-4);
@@ -331,7 +331,7 @@
 
             // alu.inputB
             if ([CONST.I_RMMOVL, CONST.I_MRMOVL, CONST.I_OPL, CONST.I_CALL,
-                CONST.I_PUSHL, CONST.I_RET, CONST.I_POPL].indexOf(input.E_icode) != -1)
+                CONST.I_PUSHL, CONST.I_RET, CONST.I_POPL, CONST.I_IADDL].indexOf(input.E_icode) != -1)
                 alu.setInputB(input.E_valB);
             else alu.setInputB(0);
 
@@ -343,7 +343,7 @@
                 alu.setFcode(0);
 
             // alu.setCC
-            if ([CONST.I_OPL].indexOf(input.E_icode) != -1
+            if ([CONST.I_OPL, CONST.I_IADDL].indexOf(input.E_icode) != -1
                 && [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(output.W_stat) == -1
                 && [CONST.S_ADR, CONST.S_INS, CONST.S_HLT].indexOf(input.W_stat) == -1)
                 alu.setNeedUpCC(true);

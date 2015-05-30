@@ -368,7 +368,7 @@
                     VM.CPU.tick();
                 }
                 catch (e) {
-                    console.log('Cache STAT', VM.C.countCacheHit, VM.C.countCacheMiss);
+                    //console.log('Cache STAT', VM.C.countCacheHit, VM.C.countCacheMiss);
                     window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }
