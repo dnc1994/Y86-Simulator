@@ -70,13 +70,16 @@
         $('#status').addClass('status_loaded');
         $('#save_filename').val(fileName.slice(0, -3));
         $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>');
-        renderCode(YOData);
+
 
         VM.CPU = new CPU();
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
 
-        if (needPreRun) preRun();
+        if (needPreRun) {
+            renderCode(YOData);
+            preRun();
+        }
     };
 
     window.maxCycle = 0;
@@ -125,7 +128,7 @@
             result += '\tW_valE   \t= ' + toHexString(state.W_valE) + '\n';
             result += '\tW_valM   \t= ' + toHexString(state.W_valM) + '\n';
             result += '\tW_dstE   \t= ' + toHexString(state.W_dstE, 0) + '\n';
-            result += '\tW_dstM   \t= ' + toHexString(state.W_dstM, 0) + '\n\n';
+            result += '\tW_dstM   \t= ' + toHexString(state.W_dstM, 0);
 
             try {
                 VM.CPU.tick();
