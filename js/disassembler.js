@@ -69,11 +69,11 @@
     };
 
     insDecoder[7] = function() {
-        return this.ins + ' $0x' + padHex(this.Dest);
+        return this.ins + ' ' + this.Dest;
     };
 
     insDecoder[8] = function() {
-        return this.ins + ' $0x' + padHex(this.Dest);
+        return this.ins + ' ' + this.Dest;
     };
 
     insDecoder[9] = function() {
@@ -124,8 +124,6 @@
     var decodeArgs = function(list, code) {
         if (code == '') return {};
 
-        console.log(list, code);
-
         var result = {};
         var pos = 0, seg;
 
@@ -136,11 +134,24 @@
                 result[item] = regName[seg];
                 pos += 1;
             }
-            else if (item == 'V' || item == 'D' || item == 'Dest') {
+            else if (item == 'V' || item == 'D') {
                 seg = code.slice(pos, pos + 8);
                 var num = parseInt(toBigEndian(seg), 16);
                 result[item] = (item == 'D' && !num ? '' : num);
                 pos += 8;
+            }
+            else if (item == 'Dest') {
+                seg = code.slice(pos, pos + 8);
+                var num = parseInt(toBigEndian(seg), 16);
+                var targetNo = Targets.indexOf(num);
+                if (targetNo == -1) {
+                    Targets.push(num);
+                    result[item] = 'target' + (targetCount ++);
+                }
+                else
+                    result[item] = 'target' + targetNo;
+                pos += 8;
+                console.log('Dest target', result[item], targetCount);
             }
             else
                 throw new Error('No such syntax: ' + item);
@@ -154,7 +165,7 @@
         var ins = '';
         var vars = {};
 
-        console.log('processing code ' + code);
+        //console.log('processing code ' + code);
 
         var insCode = code.slice(0, 2);
         if (codeToIns.hasOwnProperty(insCode)) {
@@ -171,7 +182,7 @@
         vars = decodeArgs(codeSyntax[ins], code.slice(2));
         vars['ins'] = ins;
 
-        console.log(vars);
+        //console.log(vars);
 
         result = insDecoder[insToicode[ins]].call(vars);
 
@@ -182,34 +193,47 @@
         console.log('YODump triggered.');
 
         window.DumpData = '';
+        window.Targets = [];
+        window.targetCount = 0;
 
-        // 去除备注, 指令地址和多余空格
+        // 去除备注和多余空格, 记录每条指令的地址
         var lines = data.split('\n');
+        var addrs = new Array(data.length);
+
         for (var i = 0; i < lines.length; ++ i) {
             lines[i] = lines[i].replace(/\|.*/gi, '');
+            addrs[i] = parseInt(lines[i].replace(/:.*/gi, '').replace(/^\s+/gi, ''), 16);
             lines[i] = lines[i].replace(/.*:/gi, '');
             lines[i] = lines[i].replace(/^\s+/gi, '');
             lines[i] = lines[i].replace(/\s+$/gi, '');
         }
 
-        var result = new Array(lines.length);
+        var result = [];
         var errors = [];
         var line;
 
         for (var i = 0; i < lines.length; ++ i) {
+            console.log('processing', lines[i]);
+
             line = lines[i];
             if (line == '') {
-                result[i] = '';
+                result.push('');
                 continue;
             }
 
+            var targetNo = Targets.indexOf(addrs[i]);
+            console.log('addr', addrs[i]);
+            console.log(Targets, targetNo);
+            if (targetNo != -1) {
+                result.push('target' + targetNo + ':');
+            }
+
             var decodeResult = Decode(line, i);
-            console.log(decodeResult);
             if (!decodeResult[0]) {
-                result[i] = decodeResult[1];
+                result.push(decodeResult[1]);
             }
             else {
-                result[i] = '';
+                result.push('');
                 errors.push(decodeResult[1]);
 
             }
@@ -217,11 +241,7 @@
 
         var results = result.join('\n');
 
-        console.log(results);
-
-        window.DumpData = results;
-        if (errors.length) DumpData += '\n\n\nErrors(maybe due to data area) :\n' + errors.join('\n');
-
+        window.DumpData = results + (errors.length ? '' : '\n\n\nErrors(maybe due to data area) :\n' + errors.join('\n'));
     };
 
 })();

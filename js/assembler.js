@@ -244,9 +244,8 @@
 
         window.YSLoaded = false;
         window.YOLoaded = false;
-        window.YOData = '';
-        window.YOData = '';
         window.YSData = data;
+        window.YOData = '';
         window.YSName = filename;
 
         // 去除备注和多余空格
