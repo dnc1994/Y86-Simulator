@@ -6,7 +6,7 @@
 (function() {
 
     // 指令对应的 icode
-    var insCode = {
+    window.insToicode = {
         'nop' : 0,
         'halt' : 1,
         'rrmovl' : 2,
@@ -32,7 +32,7 @@
     };
 
     // 指令对应的 ifun
-    var insFun = {
+    window.insToifun = {
         'addl' : 0,
         'subl' : 1,
         'andl' : 2,
@@ -43,14 +43,14 @@
         'je' : 3,
         'jne': 4,
         'jge': 5,
-        'jg': 6,
+        'jg': 6
     };
 
-    // 指令对应的长度
-    var insLength = [1, 1, 2, 6, 6, 6, 2, 5, 5, 1, 2, 2, 6];
+    // 指令对应的长度(Byte)
+    window.insLength = [1, 1, 2, 6, 6, 6, 2, 5, 5, 1, 2, 2, 6];
 
     // 指令对应的语法
-    var insSyntax = {};
+    window.insSyntax = {};
 
     insSyntax['halt'] = [];
     insSyntax['nop'] = [];
@@ -76,7 +76,7 @@
     insSyntax['iaddl'] = ['V', 'rB'];
 
     // 寄存器编码对应的名称
-    var regName = ['%eax', '%ecx', '%edx', '%ebx', '%esp', '%ebp', '%esi', '%edi'];
+    window.regName = ['%eax', '%ecx', '%edx', '%ebx', '%esp', '%ebp', '%esi', '%edi'];
 
     window.YSSyntaxError = function (lineNum, msg) {
         this.msg = 'Syntax error at Line ' + (lineNum + 1) + ' :' + msg;
@@ -148,11 +148,11 @@
     };
 
     // 获取寄存器编码
-    var getRegCode = function(num) {
-        var code = regName.indexOf(num);
+    var getRegCode = function(name) {
+        var code = regName.indexOf(name);
         if (code == -1) {
-            $('#status').text('Assemble failed: Not a register: "' + num + '"');
-            throw new Error('Not a register: "' + num + '"');
+            $('#status').text('Assemble failed: Not a register: "' + name + '"');
+            throw new Error('Not a register: "' + name + '"');
         }
         else
             return code.toString(16);
@@ -161,17 +161,17 @@
     // 对指令的参数进行编码
     var encodeArgs = function(list, args, symbols) {
         //console.log(list, args, symbols);
-        var item, result = {};
+        var result = {};
 
         for (var i in list) {
-            item = list[i];
-            if (item === 'rA') {
+            var item = list[i];
+            if (item == 'rA') {
                 result['rA'] = getRegCode(args[i]);
             }
-            else if (item === 'rB') {
+            else if (item == 'rB') {
                 result['rB'] = getRegCode(args[i]);
             }
-            else if (item === 'V' || item === 'D') {
+            else if (item == 'V' || item == 'D') {
                 if (symbols.hasOwnProperty(args[i])) {
                     result['V'] = toLittleEndian(padHex(symbols[args[i]], 8));
                     result['D'] = result['V'];
@@ -187,7 +187,7 @@
                     result['D'] = result['V'];
                 }
             }
-            else if (item === 'Dest') {
+            else if (item == 'Dest') {
                 try {
                     result['Dest'] = toLittleEndian(padHex(symbols[args[i]], 8));
                 }
@@ -196,11 +196,12 @@
                     throw new Error('Undefined symbol: ' + args[i]);
                 }
             }
-            else if (item === 'D(rB)') {
+            else if (item == 'D(rB)') {
                 result['D'] = toLittleEndian(padHex(parseNumber(args[i].replace(/\(.*/, '')) >>> 0, 8));
                 result['rB'] = getRegCode(args[i].replace(/^.*\((.*)\)/, '$1'));
             }
         }
+
         return result;
     };
 
@@ -218,9 +219,9 @@
         args = args[0] ? args[0].split(',') : new Array();
         vars = encodeArgs(insSyntax[ins], args, symbols);
 
-        var icode = insCode[ins];
-        if (insFun.hasOwnProperty(ins)) {
-            vars['fn'] = insFun[ins];
+        var icode = insToicode[ins];
+        if (insToifun.hasOwnProperty(ins)) {
+            vars['fn'] = insToifun[ins];
         }
         if (icode in insEncoder) {
             result = insEncoder[icode].call(vars);
@@ -237,7 +238,7 @@
 
     // YS Assembler
     window.YSLoader = function(data, filename, needPreRun) {
-        console.log('YSLoader Triggered.');
+        console.log('YSLoader triggered.');
 
         if (typeof needPreRun == 'undefined') needPreRun = false;
 
@@ -248,7 +249,7 @@
         window.YSData = data;
         window.YSName = filename;
 
-        // 去除备注和填充空格
+        // 去除备注和多余空格
         var lines = data.split('\n');
         for (var i = 0; i < lines.length; ++ i) {
             lines[i] = lines[i].replace(/#.*/gi, '');
@@ -274,10 +275,6 @@
             result[i] = ['', '', line];
 
             if (line == '') continue;
-
-            // 行号
-
-            console.log(counter);
 
             result[i][0] = [toHexString(counter, 4)];
 
@@ -322,12 +319,12 @@
             // 计算指令长度偏移量
             ins = line.match(/(^[a-z]+)/i);
             if (ins) {
-                var icode = insCode[ins[1]];
+                var icode = insToicode[ins[1]];
                 counter += insLength[icode];
             }
         }
 
-        // 汇编, 处理 long directives
+        // 汇编, 处理 .long
         for (var i = 0; i < lines.length; ++ i) {
             line = lines[i];
             if (line.trim() == '') continue;
@@ -379,7 +376,7 @@
         window.YSLoaded = true;
         // 渲染代码窗口并添加保存按钮
         renderCode(YSData);
-        $('#code_box_title p').append($('<button id="code_box_save">Save .yo file</button>'))
+        $('#code_box_title p').append($('<button id="code_box_save_yo">Save .yo file</button>'))
 
         // 汇编结束, 调用 YOLoader 载入汇编得到的 YO 文件
         YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true, needPreRun);

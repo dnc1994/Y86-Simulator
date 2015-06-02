@@ -21,6 +21,7 @@
         <script language="javascript" src="./js/cache.js"></script>
         <script language="javascript" src="./js/kernel.js"></script>
         <script language="javascript" src="./js/assembler.js"></script>
+        <script language="javascript" src="./js/disassembler.js"></script>
         <script language="javascript" src="./js/controller.js"></script>
     </head>
 
@@ -335,7 +336,7 @@
                             reader.onloadend = function(event) {
                                 if (event.target.readyState == FileReader.DONE) {
                                     // 创建代码窗口
-                                    $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>');
+                                    $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler &amp Disassembler<button id="code_box_close">Close</button></p></div>');
                                     if (fHandle.name.slice(-3) == '.yo')
                                         YOLoader(event.target.result, fHandle.name, true, true);
                                     else if (fHandle.name.slice(-3) == '.ys')
@@ -423,7 +424,7 @@
 
             // 保存运行结果
             $('#save').click(function() {
-                saveResult();
+                saveResult(runResult, ($('#save_filename').val()) + ".txt");
             });
 
             // 显示代码窗口
@@ -438,8 +439,12 @@
             });
 
             // 保存汇编结果
-            $('body').on('click', '#code_box_save', function () {
-                saveAssembleResult();
+            $('body').on('click', '#code_box_save_yo', function () {
+                saveResult(YOData, YOName);
+            });
+
+            $('body').on('click', '#code_box_save_dump', function () {
+                saveResult(DumpData, YOName.replace('.yo', '.dump'));
             });
 
             // 生成性能分析

@@ -71,13 +71,17 @@
         $('#save_filename').val(fileName.slice(0, -3));
         $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>');
 
-
         VM.CPU = new CPU();
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
 
         if (needPreRun) {
             renderCode(YOData);
+            if (!window.YSLoaded) {
+                window.YODump(YOData);
+                renderCode(DumpData);
+                $('#code_box_title p').append($('<button id="code_box_save_dump">Save .dump file</button>'))
+            }
             preRun();
         }
     };
@@ -128,7 +132,7 @@
             result += '\tW_valE   \t= ' + toHexString(state.W_valE) + '\n';
             result += '\tW_valM   \t= ' + toHexString(state.W_valM) + '\n';
             result += '\tW_dstE   \t= ' + toHexString(state.W_dstE, 0) + '\n';
-            result += '\tW_dstM   \t= ' + toHexString(state.W_dstM, 0);
+            result += '\tW_dstM   \t= ' + toHexString(state.W_dstM, 0) + '\n\n';
 
             try {
                 VM.CPU.tick();
@@ -144,8 +148,8 @@
         YOReload(false);
     };
 
-    // 输出运行结果
-    window.saveResult = function() {
+    // 保存运行/汇编/反汇编结果为文件
+    window.saveResult = function(data, filename) {
         if (!YOLoaded) {
             alert('Nothing loaded :(');
             return;
@@ -153,21 +157,10 @@
 
         saveAs(
             new Blob(
-                [window.runResult],
+                [data],
                 {type: "text/plain;charset=utf-8"}
             ),
-            ($('#save_filename').val()) + ".txt"
-        );
-    };
-
-    // 输出汇编结果
-    window.saveAssembleResult = function() {
-        saveAs(
-            new Blob(
-                [YOData],
-                {type: "text/plain;charset=utf-8"}
-            ),
-            window.YOName
+           filename
         );
     };
 
