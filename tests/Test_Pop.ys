@@ -1,5 +1,0 @@
-irmovl $0x100, %esp
-irmovl $0xABCD, %eax
-pushl %eax
-popl %esp
-halt

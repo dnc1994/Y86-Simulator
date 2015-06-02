@@ -1,6 +1,0 @@
-call proc
-irmovl $10,%edx
-halt
-proc:
-ret
-irmovl $1,%ebx
