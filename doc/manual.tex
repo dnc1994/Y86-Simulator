@@ -1,0 +1,51 @@
+%This file contains the tex code of my Y86 Simulator manual for my ICS course.
+%Author: ’¬¡Ë∫¿/Zhang Linghao <zlhdnc1994@gmail.com>
+
+\documentclass[12pt]{article}
+\usepackage[top=1.10in, bottom=0.75in, left=1.35in, right=1.35in]{geometry}
+\linespread{1.2}
+\usepackage{ctex}
+\usepackage[colorlinks, citecolor=green, linkcolor=blue, menucolor=red, CJKbookmarks=true]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\usepackage{titling}
+\usepackage{indentfirst}
+\usepackage[linesnumbered]{algorithm2e}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{bibentry}
+\usepackage{natbib}
+
+\iffalse
+\AtBeginDocument{
+\begin{CJK*}{GBK}{SimSun}
+\CJKindent
+\sloppy\CJKspace
+\CJKtilde
+}
+\AtEndDocument{\end{CJK*}}
+\fi
+
+\begin{document}
+
+\pagestyle{fancy}
+\lhead{\textbf{{\thetitle}}}
+\rhead{\textbf{\nouppercase{\firstleftmark}}}
+\cfoot{\thepage}
+
+\title{\textbf{Y86 Simulator\\User Manual}}
+\author{’¬¡Ë∫¿\\13307130225}
+\date{\today}
+\maketitle
+
+\tableofcontents
+\clearpage
+
+%load yo/ys {drop, assem, disassem{data area}, save}
+%stage/regs {status, reg update}
+%memory {why cc, why <1024, watch}
+%control {step, prev, auto-run, pause, reset}
+%save {filename}
+%perf {hazard, cache, cpi chart}
+
+\end{document}
