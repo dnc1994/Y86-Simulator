@@ -9,3 +9,6 @@ Final project for ICS course @ Fudan University.
 - Boostrap
 - FileSaver.js
 - Chart.js
+
+## License
+[MIT license](https://github.com/dnc1994/Y86-Simulator/blob/master/LICENSE)

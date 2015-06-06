@@ -8,6 +8,7 @@
     window.AssertError = function(msg) {
         this.message = msg;
     };
+
     window.AssertError.prototype.toString = function() {
         return this.msg;
     };
@@ -31,7 +32,6 @@
     };
 
     window.isInt = function(n) {
-        //console.log('isInt ' + n);
         return typeof n == 'number' && n % 1 == 0;
     };
 
@@ -49,7 +49,6 @@
     };
 
     window.toUnsigned = function(n) {
-        //console.log('toUnsigned' + n);
         assert(isInt(n));
         return n >>> 0;
     };
@@ -66,7 +65,6 @@
 
     // 转换并填充为 len 位 16 进制字符串
     window.padHex = function(data, len) {
-        //console.log('padHex ' + data);
         if (typeof len === 'undefined') len = 8;
         data = parseInt(data);
         data = toUnsigned(data);
@@ -89,6 +87,7 @@
 
     };
 
+    // 转换为大端表示
     window.toBigEndian = toLittleEndian;
 
 })();

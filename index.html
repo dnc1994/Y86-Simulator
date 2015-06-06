@@ -1,6 +1,6 @@
 <!--
----- File: index.html
----- Author: Zhang Linghao <zlhdnc1994@gmail.com>
+     File: index.html
+     Author: Zhang Linghao <zlhdnc1994@gmail.com>
 -->
 
 <!DOCTYPE HTML>
@@ -26,9 +26,10 @@
     </head>
 
     <body>
+
+        <!-- 页面布局 -->
         <div id="code_box">
             <div id="code_box_content">
-                <!--<div id="code_box_title"><p>Y86 Assembler<button id="code_box_close">Close</button></p></div>-->
             </div>
         </div>
 
@@ -36,8 +37,8 @@
             <div id="perf_box_content">
                 <div id="perf_box_title"><p>Performance Analysis<button id="perf_box_close">Close</button></p></div>
                 <div id="perf_table">
-                    <div id="perf_hazard_table" width="400" height="200"></div>
                     <div id="perf_cache_table" width="400" height="200"></div>
+                    <div id="perf_hazard_table" width="400" height="200"></div>
                 </div>
                 <canvas id="perf_canvas" width="1000" height="600"></canvas>
             </div>
@@ -357,7 +358,10 @@
                 if (e.keyCode == 37) lastStep(); // Left
                 else if (e.keyCode == 39) nextStep(); // Right
                 else if (e.keyCode == 13) startTimer($('#freq').val()); // Enter
+                else if (e.keyCode == 32) stopTimer(); // Space
                 else if (e.keyCode == 82) YOReload(true); // R
+                else if (e.keyCode == 70) $('#freq').focus(); // F
+                else if (e.keyCode == 77) $('#mem_addr').focus(); // M
                 else return;
                 e.preventDefault();
             }).keyup(function(e) { updateMem(); });
@@ -443,6 +447,7 @@
                 saveResult(YOData, YOName);
             });
 
+            // 保存反汇编结果
             $('body').on('click', '#code_box_save_dump', function () {
                 saveResult(DumpData, YOName.replace('.yo', '.dump'));
             });
@@ -453,11 +458,12 @@
                     alert('Please first run through the end before viewing performance analysis!');
                     return;
                 }
-                genChart();
                 genTable();
+                genChart();
                 $('#perf_box').addClass('show');
             });
 
+            // 关闭性能分析窗口
             $('#perf_box_close').click(function() {
                 $('#perf_box').removeClass('show');
             });

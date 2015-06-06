@@ -5,6 +5,7 @@
 
 (function() {
 
+    // 目标码对应的指令
     window.codeToIns = {
         '00' : 'nop',
         '10' : 'halt',
@@ -38,6 +39,7 @@
         return this.msg;
     };
 
+    // 用于解码单条指令
     var insDecoder = [];
 
     insDecoder[0] = function() {
@@ -68,6 +70,7 @@
         return this.ins + ' ' + this.rA + ', ' + this.rB;
     };
 
+    // 注意这里不是一个地址而是一个 target 字符串
     insDecoder[7] = function() {
         return this.ins + ' ' + this.Dest;
     };
@@ -92,6 +95,7 @@
         return this.ins + ' $0x' + padHex(this.V) + ', ' + this.rB;
     };
 
+    // 目标码对应的语法
     window.codeSyntax = {};
 
     codeSyntax['halt'] = [];
@@ -116,11 +120,12 @@
     codeSyntax['pushl'] = ['rA'];
     codeSyntax['popl'] = ['rA'];
     codeSyntax['iaddl'] = ['rA', 'rB', 'V'];
-    
+
     var getRegName = function(code) {
         if (code < 0 || code > 7) throw new Error('No such register: ' + code);
     };
 
+    // 对目标码的参数进行解码
     var decodeArgs = function(list, code) {
         if (code == '') return {};
 
@@ -143,6 +148,7 @@
             else if (item == 'Dest') {
                 seg = code.slice(pos, pos + 8);
                 var num = parseInt(toBigEndian(seg), 16);
+                // 处理 JXX / CALL
                 var targetNo = Targets.indexOf(num);
                 if (targetNo == -1) {
                     Targets.push(num);
@@ -160,6 +166,7 @@
         return result;
     };
 
+    // 对单行目标码进行解码
     window.Decode = function(code, lineNum) {
         var result = '';
         var ins = '';
@@ -167,6 +174,7 @@
 
         //console.log('processing code ' + code);
 
+        // 目标码不属于指令, 可能是数据
         var insCode = code.slice(0, 2);
         if (codeToIns.hasOwnProperty(insCode)) {
             ins = codeToIns[insCode];
@@ -175,6 +183,7 @@
             return [1, 'Invalid icode:ifun at line ' + (lineNum + 1) + ': ' + code];
         }
 
+        // 目标码长度不匹配
         if (code.length != 2 * insLength[insToicode[ins]]) {
             return [1, 'Instruction length not matched at line ' + (lineNum + 1) + ':' + code];
         }
@@ -189,10 +198,12 @@
         return [0, result];
     };
 
+    // Y86 Disassembler
     window.YODump = function(data) {
         console.log('YODump triggered.');
 
         window.DumpData = '';
+        // 记录所有的 JXX/CALL target
         window.Targets = [];
         window.targetCount = 0;
 
@@ -221,9 +232,11 @@
                 continue;
             }
 
+            // 匹配target table
             var targetNo = Targets.indexOf(addrs[i]);
-            console.log('addr', addrs[i]);
-            console.log(Targets, targetNo);
+            //console.log('addr', addrs[i]);
+            //console.log(Targets, targetNo);
+            // 插入 target
             if (targetNo != -1) {
                 result.push('target' + targetNo + ':');
             }
@@ -232,6 +245,7 @@
             if (!decodeResult[0]) {
                 result.push(decodeResult[1]);
             }
+            // 解码错误
             else {
                 result.push('');
                 errors.push(decodeResult[1]);

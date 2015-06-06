@@ -13,13 +13,14 @@
         return this.msg;
     };
 
+    // 重置
     window.YOReload = function(needUpdate) {
         window.stopTimer();
-        if (!YOLoaded) {
+        if (!window.YOLoaded) {
             alert('Nothing loaded :(');
             return;
         }
-        YOLoader(window.YOData, window.YOName, needUpdate, false);
+        window.YOLoader(window.YOData, window.YOName, needUpdate, false);
     };
 
     window.YOLoaded = false;
@@ -55,7 +56,7 @@
                 var addr = parseInt(match[1], 16);
                 for (var cPos = 0; cPos < match[2].length; cPos += 2, ++ addr) {
                     var tmpByte = parseInt(match[2][cPos] + match[2][cPos + 1], 16);
-                    VM.M.writeByte(addr, tmpByte);
+                    window.VM.M.writeByte(addr, tmpByte);
                 }
             }
             $('#status').html(fileName + " loaded.");
@@ -71,14 +72,16 @@
         $('#save_filename').val(fileName.slice(0, -3));
         $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>');
 
-        VM.CPU = new CPU();
+        window.VM.CPU = new CPU();
         if (needUpdate || !window.YOLoaded)
             updateDisplay(VM.CPU.getInput());
 
         if (needPreRun) {
             renderCode(YOData);
-            if (!window.YSLoaded) {
-                window.YODump(YOData);
+            // 载入的是 .yo 文件, 调用 YODump 进行反汇编
+            if (!YSLoaded) {
+                YODump(YOData);
+                // 渲染代码窗口并添加保存按钮
                 renderCode(DumpData);
                 $('#code_box_title p').append($('<button id="code_box_save_dump">Save .dump file</button>'))
             }
@@ -88,12 +91,13 @@
 
     window.maxCycle = 0;
 
+    // 预先获取运行结果, 提高体验
     window.preRun = function() {
         var result = '';
         var nCycle = 0;
 
         while (true) {
-            var state = VM.CPU.getInput();
+            var state = window.VM.CPU.getInput();
 
             result += 'Cycle_' + nCycle.toString() + '\n';
             result += '--------------------\n';
@@ -145,12 +149,12 @@
 
         window.runResult = result;
 
-        YOReload(false);
+        window.YOReload(false);
     };
 
     // 保存运行/汇编/反汇编结果为文件
     window.saveResult = function(data, filename) {
-        if (!YOLoaded) {
+        if (!window.YOLoaded) {
             alert('Nothing loaded :(');
             return;
         }
@@ -174,6 +178,7 @@
         window.clockTimer = window.setInterval(function(){ if(!nextStep()) stopTimer();}, delay);
     };
 
+    // 暂停
     window.stopTimer = function() {
         if (window.clockTimer) window.clearInterval(window.clockTimer);
         window.clockTimer = undefined;
@@ -188,6 +193,7 @@
         $('#code_box_content').append(container);
     };
 
+    // 更新内存监视器
     window.updateMem = function() {
         var num = parseInt($('#mem_addr').val());
         if (isNaN(num))
@@ -229,6 +235,7 @@
         var loadName = function(elemID, transfer) {
             $('#' + elemID).html(transfer($('#' + elemID).html()));
         };
+
         loadName('D_stat', getStatName);
         loadName('E_stat', getStatName);
         loadName('M_stat', getStatName);
@@ -263,38 +270,40 @@
         for (var i = 0; i < 8; ++ i) {
             var $Node = $('#' + getRegisterName(i));
             var pre = $Node.html();
-            $Node.html(VM.R[getRegisterName(i)]);
+            $Node.html(window.VM.R[getRegisterName(i)]);
             loadName(getRegisterName(i), toHexString);
+            // 闪烁动画
             if ($Node.html() != pre) {
                 $Node.parent().finish();
                 var curColor = $Node.parent().css("background-color");
                 $Node.parent().css("background-color", "#88FF88").animate({backgroundColor: curColor}, 500);
+                //APlay('biu.mp3');
             }
         }
 
         // 修正当前最大有效地址
-        var m = VM.M.maxMemAddr, b = VM.R.R_EBP, s = VM.R.R_ESP, r = m % 4;
+        var m = window.VM.M.maxMemAddr, b = window.VM.R.R_EBP, s = window.VM.R.R_ESP, r = m % 4;
         //console.log(m, b, s, r);
         m -= !r ? 0 : r;
         if (b > m) m = b;
         if (s > m) m = s;
-        VM.M.maxMemAddr = Math.min(m, 1024);
+        window.VM.M.maxMemAddr = Math.min(m, 1024);
 
         //console.log('maxMem', window.maxMemListAddr, VM.M.maxMemAddr);
 
         // 更新内存显示
         for (var addr = 0; addr <= window.maxMemListAddr; addr += 4) {
             //console.log('addr: ' + addr);
-            var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
+            var val = toLittleEndian(padHex(window.VM.M.readUnsignedThrough(addr)));
             //console.log('memchange: ' + addr + ' -> ' + val);
             $('#memval_' + addr).text(val);
         }
 
         // 创建新内存显示单元
-        if (window.maxMemListAddr < VM.M.maxMemAddr) {
-            for (var addr = window.maxMemListAddr + 4; addr <= VM.M.maxMemAddr; addr += 4) {
+        if (window.maxMemListAddr < window.VM.M.maxMemAddr) {
+            for (var addr = window.maxMemListAddr + 4; addr <= window.VM.M.maxMemAddr; addr += 4) {
                 //console.log('creating elem for addr: ' + addr);
-                var val = toLittleEndian(padHex(VM.M.readUnsigned(addr)));
+                var val = toLittleEndian(padHex(VM.M.readUnsignedThrough(addr)));
                 var addrID = 'memaddr_' + addr.toString();
                 var valID = 'memval_' + addr.toString();
                 var addrStr = '<span id=' + addrID + ' class="Maddr">' + padHex(addr, 4) + '</span>';
@@ -302,22 +311,23 @@
                 $('#mem_list').append($('<div>' + addrStr + valStr + '</div>'));
             }
         }
-        window.maxMemListAddr = VM.M.maxMemAddr;
+        window.maxMemListAddr = window.VM.M.maxMemAddr;
 
-        // 更新 %ebp %esp 指针显示
+        // 更新 %ebp %esp 指针显示, 出于前端性能考虑只显示前 1024 位内存
         var ebp = toUnsigned(VM.R.R_EBP) > 1024 ? '#none_ptr' : '#memaddr_' + toUnsigned(VM.R.R_EBP);
         var esp = toUnsigned(VM.R.R_ESP) > 1024 ? '#none_ptr' : '#memaddr_' + toUnsigned(VM.R.R_ESP);
-        // 出于前端性能考虑只显示前 1024 位内存
         if (ebp == '#none_ptr' || esp == '#none_ptr') return;
         //console.log(ebp, esp);
         $('#ebp_ptr').css('top', $(ebp)[0].offsetTop + 'px');
         $('#esp_ptr').css('top', $(esp)[0].offsetTop + 'px');
+        // 滚动动画
         $('#mem_monitor').finish();
         $('#mem_monitor').animate({
             scrollTop: $(ebp)[0].offsetTop - 250
         }, 300);
     };
 
+    // 生成 CPI 图
     window.genChart = function() {
         var data = {
             labels : window.CPIcycles,
@@ -335,24 +345,28 @@
         var nChart = new Chart(ctx).Line(data);
     };
 
+    // 生成性能分析表格
     window.genTable = function() {
         window.VM.CPU.getCPI(true);
 
-        var hit = VM.C.countCacheHit, miss = VM.C.countCacheMiss;
+        var hit = window.VM.C.countCacheHit, miss = window.VM.C.countCacheMiss;
         var total = hit + miss;
         var p_hit = ((hit / total) * 100).toFixed(1);
         var p_miss = (100 - p_hit).toFixed(1);
-        window.cache_table = '<table class="tg"><tr><th class="tg-vc88">Hit/Miss</th><th class="tg-vc88">Count</th><th class="tg-vc88">Percentage</th></tr><tr><td class="tg-vyw9">Hit</td><td class="tg-vyw9">' + hit + '</td><td class="tg-vyw9">' + p_hit + '%</td></tr><tr><td class="tg-vyw9">Miss</td><td class="tg-vyw9">' + miss + '</td><td class="tg-vyw9">' + p_miss + '%</td></tr><tr><td class="tg-031e">Total</td><td class="tg-031e">' + total + '</td><td class="tg-031e"></td></tr></table>';
+        window.cache_table = '<table class="tg"><tr><th class="tg-vc88">Hit/Miss</th><th class="tg-vc88">Count</th><th class="tg-vc88">Percentage</th></tr><tr><td class="tg-vyw9">Hit</td><td class="tg-vyw9">' + hit + '</td><td class="tg-vyw9">' + p_hit + '%</td></tr><tr><td class="tg-vyw9">Miss</td><td class="tg-vyw9">' + miss + '</td><td class="tg-vyw9">' + p_miss + '%</td></tr><tr><td class="tg-vyw9">Total</td><td class="tg-vyw9">' + total + '</td><td class="tg-vyw9"></td></tr></table>';
 
-        $('#perf_hazard_table').html(window.hazard_table);
         $('#perf_cache_table').html(window.cache_table);
+        $('#perf_hazard_table').html(window.hazard_table);
+
     };
 
+    /*
     window.APlay = function(filename, mute){
         if (typeof mute === 'undefined') mute = 0;
         if (mute) return;
-        var audio = new Audio('audio/' + filename + '.mp3');
+        var audio = new Audio('audio/' + filename);
         audio.play();
     };
+    */
 
 })();

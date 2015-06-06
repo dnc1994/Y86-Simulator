@@ -260,10 +260,38 @@ html, body {
     margin-top: 15px;
 }
 
-.tg td{font-family:Arial, sans-serif;font-size:14px;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#669;background-color:#e8edff;}
+.tg td{
+    font-family:Arial, sans-serif;
+    font-size:14px;
+    padding:10px 5px;
+    border-style:solid;
+    border-width:1px;
+    overflow:hidden;
+    word-break:normal;
+    border-color:#aabcfe;
+    color:#669;
+    background-color:#e8edff;
+}
 
-.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:10px 5px;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;border-color:#aabcfe;color:#039;background-color:#ffffff;}
+.tg th{
+    font-family:Arial, sans-serif;
+    font-size:14px;
+    font-weight:normal;
+    padding:10px 5px;
+    border-style:solid;
+    border-width:1px;
+    overflow:hidden;
+    word-break:normal;
+    border-color:#aabcfe;
+    color:#039;
+    background-color:#ffffff;
+}
 
-.tg .tg-vyw9{font-family:"Courier New", Courier, monospace !important;}
+.tg .tg-vyw9{
+    font-family:"Courier New", Courier, monospace !important;
+}
 
-.tg .tg-vc88{font-weight:bold;font-family:"Courier New", Courier, monospace !important;}
+.tg .tg-vc88{
+    font-weight:bold;
+    font-family:"Courier New", Courier, monospace !important;
+}

@@ -37,11 +37,11 @@
             var lineNum;
 
             for (lineNum in [0, 1]) {
+                // Cache Hit
                 if (dataCache.Set[index].Line[lineNum].valid && dataCache.Set[index].Line[lineNum].tag == tag) {
                     //console.log('cache read hit @ line ' + lineNum +', address = ' + address);
                     ++ this.countCacheHit;
                     ++ dataCache.Set[index].Line[lineNum].countVisit;
-                    //console.log(offset);
                     return dataCache.Set[index].Line[lineNum].Block[offset];
                 }
             }
@@ -66,6 +66,7 @@
             var lineNum;
 
             for (lineNum in [0, 1]) {
+                // Cache Hit
                 if (dataCache.Set[index].Line[lineNum].valid && dataCache.Set[index].Line[lineNum].tag == tag) {
                     //console.log('cache write hit @ line ' + lineNum +', address = ' + address);
                     ++ this.countCacheHit;
@@ -102,7 +103,7 @@
             if (dataCache.Set[index].Line[0].valid && dataCache.Set[index].Line[1].valid) {
                 // 两条线均被占用, 抛弃访问次数少的那条线
                 lineDumped = lineNum = dataCache.Set[index].Line[0].countVisit >= dataCache.Set[index].Line[1].countVisit ? 1 : 0;
-                // Cache 中的数据被修改过, 需写回内存
+                // 数据被修改过, 需写回内存
                 if (dataCache.Set[index].Line[lineNum].dirty) {
                     //console.log('set ' + index + ' line ' + lineNum + ' dumped and data written back to memory');
                     // 根据 tag 和 index 计算对应的(低位)内存地址

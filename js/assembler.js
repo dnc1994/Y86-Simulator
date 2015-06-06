@@ -75,7 +75,6 @@
     insSyntax['popl'] = ['rA'];
     insSyntax['iaddl'] = ['V', 'rB'];
 
-    // 寄存器编码对应的名称
     window.regName = ['%eax', '%ecx', '%edx', '%ebx', '%esp', '%ebp', '%esi', '%edi'];
 
     window.YSSyntaxError = function (lineNum, msg) {
@@ -147,7 +146,6 @@
         return 'c08' + this.rB + pad(this.V);
     };
 
-    // 获取寄存器编码
     var getRegCode = function(name) {
         var code = regName.indexOf(name);
         if (code == -1) {
@@ -213,6 +211,7 @@
         var args = [];
         var vars = {};
 
+        // 提取参数
         ins = ins.replace(/\s*,\s*/i, ',');
         args = ins.split(' ');
         ins = args.splice(0, 1)[0];
@@ -236,7 +235,7 @@
 
     window.YSLoaded = false;
 
-    // YS Assembler
+    // Y86 Assembler
     window.YSLoader = function(data, filename, needPreRun) {
         console.log('YSLoader triggered.');
 
@@ -304,6 +303,7 @@
                         $('#status').text('Assemble failed at line ' + (i + 1) + ': ' + e.message);
                         throw new YSSyntaxError(i, e.message);
                     }
+                    // 根据 align 修正偏移量
                     counter = Math.ceil(counter / nAlign) * nAlign;
                 }
                 else if (directive[1] == '.long') {

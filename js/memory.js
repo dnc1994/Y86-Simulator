@@ -13,6 +13,7 @@
         assert(isInt(Blocks) && Blocks <= 65536);
 
         window.memoryContainer = new Array(Blocks);
+        // 记录 highAddr 与 Block No. 的映射
         window.mapping = {};
         window.allocatedBlocks = 0;
         // 记录当前最大有效地址
@@ -21,11 +22,12 @@
         window.VMOutOfMemoryException = function(msg) {
             this.message = msg;
         };
+
         VMOutOfMemoryException.prototype.toString = function() {
             return this.message;
         };
 
-        // 分配 block
+        // 分配 Block
         var allocateMemBlock = function(address) {
             //console.log('allocateMemBlock: ' + address);
             assert(isInt(address));
@@ -103,7 +105,7 @@
             if (address > this.maxMemAddr) this.maxMemAddr = address;
         };
 
-        // 接受 Little Endian, 与实际在内存中存储格式一致
+        // 接受 Little Endian
         this.writeWord = function(address, val) {
             assert(isInt(address));
             address = toUnsigned(address);

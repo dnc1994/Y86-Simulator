@@ -14,7 +14,7 @@
     var ALU = function() {
         var inputA = 0, inputB = 0, Fcode = 0, needUpCC = 0;
         var tVal = 0;
-        var CC = 4; // ZF = 1
+        var CC = 4; // 初始时 ZF = 1
 
         // 第 0 位表示 OF, 第 1 位表示 SF, 第 2 位表示 ZF
         // 注意先将对应的位置为 0
@@ -48,6 +48,7 @@
         this.getSF = getSF;
         this.getOF = getOF;
 
+        // 封装运算
         var Calc = {};
 
         Calc[CONST.A_ADD] = function() {
@@ -70,6 +71,7 @@
             if (needUpCC) updateCC();
         };
 
+        // 判定 OF
         var updateOF = {};
 
         updateOF[CONST.A_ADD] = function() {
@@ -90,6 +92,8 @@
             setOF(false);
         };
 
+
+        // 封装分支判断
         var Cond = {};
 
         Cond[CONST.C_TRUE] = function() {
@@ -120,6 +124,7 @@
             return !((getSF() ^ getOF()) | getZF());
         };
 
+        // 一些接口
         this.setInputA = function (val) {
             assert(isInt(val));
             inputA = val;
@@ -338,7 +343,6 @@
             // alu.Fcode
             if (input.E_icode == CONST.I_OPL)
                 alu.setFcode(input.E_ifun);
-            // ??
             else
                 alu.setFcode(0);
 
@@ -351,14 +355,13 @@
                 alu.setNeedUpCC(false);
 
             output.M_valE = alu.run();
-            //console.log('M_val calc by ALU: ' + Eoutput.M_valE);
             // E_icode != CONST.I_JXX 时 M_Bch 的值不影响流水线
-            //output.M_Bch = input.E_icode != CONST.I_JXX ? 0 : alu.getCnd(input.E_ifun);
             output.M_Bch = alu.getCnd(input.E_ifun);
             output.M_valA = input.E_valA;
             if (input.E_icode == CONST.I_RRMOVL && !output.M_Bch)
                 output.M_dstE = CONST.R_NONE;
-            else output.M_dstE = input.E_dstE;
+            else
+                output.M_dstE = input.E_dstE;
         };
 
         var memory = function () {
@@ -380,11 +383,11 @@
             memRead = [CONST.I_MRMOVL, CONST.I_POPL, CONST.I_RET].indexOf(input.M_icode) != -1;
             memWrite = [CONST.I_RMMOVL, CONST.I_PUSHL, CONST.I_CALL].indexOf(input.M_icode) != -1;
 
-            if (memRead) output.W_valM = VM.M.readInt(memAddr);
+            if (memRead) output.W_valM = window.VM.M.readInt(memAddr);
             //console.log('memAddr: ' + memAddr);
             if (memWrite)
                 try {
-                    VM.M.writeInt(memAddr, input.M_valA);
+                    window.VM.M.writeInt(memAddr, input.M_valA);
                 }
                 catch (e) {
                     // 内存地址非法
@@ -395,8 +398,8 @@
         var write_back = function () {
             stat = input.W_stat;
             if (input.W_icode == CONST.I_RMMOVL) return;
-            VM.R.set(input.W_dstE, input.W_valE);
-            VM.R.set(input.W_dstM, input.W_valM);
+            window.VM.R.set(input.W_dstE, input.W_valE);
+            window.VM.R.set(input.W_dstM, input.W_valM);
         };
 
         // 流水线控制逻辑的实现
@@ -465,6 +468,7 @@
                 newInput.F_predPC = input.F_predPC;
             }
 
+            // 保存新一个周期的流水线寄存器状态
             input = newInput;
         };
 
@@ -485,6 +489,7 @@
             pipeline_control_logic();
         };
 
+        // 一些接口
         this.getStat = function () {
             return stat;
         };
@@ -497,8 +502,26 @@
             return instruction;
         };
 
+        this.getZF = function() {
+            return alu.getZF();
+        };
+
+        this.getSF = function() {
+            return alu.getSF();
+        };
+
+        this.getOF = function() {
+            return alu.getOF();
+        };
+
+        this.getInput = function() {
+            return input;
+        };
+
+        // 计算 CPI
         this.getCPI = function(genTable) {
             if (typeof genTable == 'undefined') genTable = false;
+
             var ins_freq = {
                 lp : !instruction ? 0: (count_mrmovl + count_popl) / instruction,
                 mp : !instruction ? 0: count_cond_branch / instruction,
@@ -522,26 +545,11 @@
             console.log(1.0 + lp + mp + rp);
             */
 
-            // 生成性能分析表格
+            // 传入 true 表示导出 CPI 数据
             if (genTable)
-                window.hazard_table = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["lp"].toFixed(3) + '</td><td class="tg-031e">1</td><td class="tg-vyw9">' + (ins_freq["lp"] * cond_freq["lp"]).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Mispredict</td><td class="tg-vyw9">' + ins_freq["mp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["mp"].toFixed(3) + '</td><td class="tg-031e">2</td><td class="tg-vyw9">' + (ins_freq["mp"] * cond_freq["mp"] * 2).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["rp"].toFixed(3) + '</td><td class="tg-031e">3</td><td class="tg-vyw9">' + (ins_freq["rp"] * cond_freq["rp"] * 3).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-031e"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
+                window.hazard_table = '<table class="tg"><tr><th class="tg-vc88">Cause</th><th class="tg-vc88">InsFreq</th><th class="tg-vc88">CondFreq</th><th class="tg-vc88">Bubble(s)</th><th class="tg-vc88">Product</th></tr><tr><td class="tg-vyw9">Load/Use</td><td class="tg-vyw9">' + ins_freq["lp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["lp"].toFixed(3) + '</td><td class="tg-vyw9">1</td><td class="tg-vyw9">' + (ins_freq["lp"] * cond_freq["lp"]).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Mispredict</td><td class="tg-vyw9">' + ins_freq["mp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["mp"].toFixed(3) + '</td><td class="tg-vyw9">2</td><td class="tg-vyw9">' + (ins_freq["mp"] * cond_freq["mp"] * 2).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Return</td><td class="tg-vyw9">' + ins_freq["rp"].toFixed(3) + '</td><td class="tg-vyw9">' + cond_freq["rp"].toFixed(3) + '</td><td class="tg-vyw9">3</td><td class="tg-vyw9">' + (ins_freq["rp"] * cond_freq["rp"] * 3).toFixed(3) + '</td></tr><tr><td class="tg-vyw9">Total Penalty</td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-vyw9"></td><td class="tg-vyw9">' + (lp + mp + rp).toFixed(3) + '</td></tr></table>';
+
             return (1.0 + lp + mp + rp).toFixed(3);
-        };
-
-        this.getZF = function() {
-            return alu.getZF();
-        };
-
-        this.getSF = function() {
-            return alu.getSF();
-        };
-
-        this.getOF = function() {
-            return alu.getOF();
-        };
-
-        this.getInput = function() {
-            return input;
         };
     }
 
