@@ -2,7 +2,7 @@
 %Author: 章凌豪/Zhang Linghao <zlhdnc1994@gmail.com>
 
 \documentclass[12pt]{article}
-\usepackage[top=1.10in, bottom=0.75in, left=1.10in, right=1.10in]{geometry}
+\usepackage[top=1.15in, bottom=0.75in, left=1.00in, right=1.00in]{geometry}
 \linespread{1.3}
 \usepackage{ctex}
 \usepackage[colorlinks, citecolor=green, linkcolor=blue, menucolor=red, CJKbookmarks=true]{hyperref}
@@ -38,14 +38,42 @@
 \date{\today}
 \maketitle
 
-\tableofcontents
-\clearpage
+%\tableofcontents
+%\clearpage
 
-%load yo/ys {drop, assem, disassem{data area}, save}
-%stage/regs {status, reg update}
-%memory {why cc, why <1024, watch}
-%control {step, prev, auto-run, pause, reset}
-%save {filename}
-%perf {hazard, cache, cpi chart}
+\vspace{42pt}
+
+\section{Usage}
+
+本Y86流水线模拟器不需要安装，直接用Chrome / Firefox / Safari等浏览器打开{\bf index.html}即可运行，所有用到的JavaScript和CSS文件都是自带的。由于兼容IE浏览器的工作量过大，所以不支持IE。为防止由于预想之外的原因导致运行表现与预期不一致，用户可以配合附带的demo视频使用本手册。
+
+\section{User Interface}
+
+\begin{enumerate}
+\item 将一个.yo或.ys文件拖拽至页面的任一位置即可加载，如果加载不成功会在页面上方控制栏左侧显示错误信息。
+\item 对于.yo文件，模拟器会尝试对其进行反汇编；对于.ys文件，模拟器会对其进行汇编。如果没有错误发生，可以通过点击控制栏左侧的“xxx.yo loaded.”打开代码显示窗口进行查看，也可以保存反汇编/汇编的结果。
+\item 载入文件后，可以通过控制栏上的五个按钮（或通过键盘快捷键进行控制，详见附录）分别进行步退、暂停、自动运行、步进和重置操作。按钮右边的{\bf Frequency}框可以设定自动运行的频率，最高支持1000HZ；{\bf Mem Addr}框中可以输入要监视的内存地址（以0x开头的十六进制地址），对应的值会在界面最左侧的运行状态栏下valMem条目中显示。
+\item 界面的主体是五列流水线寄存器的状态显示。在最左侧的Fetch下方可以查看模拟器的运行状态，包括CPU状态、周期数、指令数、监视内存值、CPI和缓存命中统计；在Write back的右侧是8个寄存器的数值显示，当数值发生变化时会触发闪烁动画；再右侧是Condtion Codes的显示。
+\item 界面的最右侧是内存数据的显示，没有被写过的内存显示为0xCC，有两个指针会分别指示\%ebp和\%esp的位置。出于前端性能考虑，只显示前1024位内存。
+\item 界面下方可以保存运行结果，即每个周期内流水线寄存器的数值，也可以自定义保存文件名；在程序运行结束后，可以点击{\bf Performance Analysis}来打开性能分析窗口，其中包含对缓存命中和CPI的统计。
+\end{enumerate}
+
+\section{Appendix}
+
+下面列出键盘快捷键对应的操作：
+
+\begin{table}[h]
+\begin{tabular}{|l|l|}
+\hline
+{\bf 按键} & {\bf 操作} \\ \hline
+←        & 步退       \\ \hline
+→        & 步进       \\ \hline
+回车       & 自动运行     \\ \hline
+空格       & 暂停       \\ \hline
+R        & 重置       \\ \hline
+F        & 输入运行频率   \\ \hline
+M        & 输入监视内存地址 \\ \hline
+\end{tabular}
+\end{table}
 
 \end{document}
