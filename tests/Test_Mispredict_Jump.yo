@@ -1,9 +1,0 @@
-  0x0000: 6311         | xorl %eax, %eax
-  0x0002: 740e000000   | jne b
-  0x0007:              | a:
-  0x0007: ff0000000000 | invalid instruction
-  0x000d: 10           | halt
-  0x000e:              | b:
-  0x000e: 30830b000000 | irmovl $0xb, %ebx
-  0x0014: 10           | halt
-                       | 

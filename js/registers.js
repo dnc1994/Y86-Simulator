@@ -52,6 +52,7 @@
         this.W_dstM = CONST.R_NONE;
         this.W_stat = CONST.S_BUB;
 
+        // 复制构造方法
         for (entry in val) {
             if (typeof this[entry] != 'undefined') {
                 this[entry] = val[entry];
@@ -74,6 +75,7 @@
         this.R_ESI = 0;
         this.R_EDI = 0;
 
+        // 复制构造方法
         for (entry in val) {
             if(typeof this[entry] != 'undefined') {
                 this[entry] = val[entry];
