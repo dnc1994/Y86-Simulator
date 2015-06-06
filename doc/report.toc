@@ -1,0 +1,23 @@
+\contentsline {section}{\numberline {1}Overview}{3}{section.1}
+\contentsline {subsection}{\numberline {1.1}Development Environment}{3}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}File Organization}{3}{subsection.1.2}
+\contentsline {section}{\numberline {2}Design}{3}{section.2}
+\contentsline {subsection}{\numberline {2.1}Motivation}{3}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Features}{4}{subsection.2.2}
+\contentsline {section}{\numberline {3}Details}{4}{section.3}
+\contentsline {subsection}{\numberline {3.1}Kernel}{5}{subsection.3.1}
+\contentsline {subsection}{\numberline {3.2}Memory}{5}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}Cache}{5}{subsection.3.3}
+\contentsline {subsection}{\numberline {3.4}Assembler}{6}{subsection.3.4}
+\contentsline {subsection}{\numberline {3.5}Disassembler}{6}{subsection.3.5}
+\contentsline {subsection}{\numberline {3.6}Web UI}{7}{subsection.3.6}
+\contentsline {subsection}{\numberline {3.7}Performance Analysis}{7}{subsection.3.7}
+\contentsline {section}{\numberline {4}Evaluation}{8}{section.4}
+\contentsline {subsection}{\numberline {4.1}Test Cases}{8}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Performance}{8}{subsection.4.2}
+\contentsline {section}{\numberline {5}Discussion}{8}{section.5}
+\contentsline {subsection}{\numberline {5.1}Memory Issues}{8}{subsection.5.1}
+\contentsline {subsection}{\numberline {5.2}Disassembler Issues}{9}{subsection.5.2}
+\contentsline {subsection}{\numberline {5.3}Limitation of Cache}{9}{subsection.5.3}
+\contentsline {subsection}{\numberline {5.4}Limitation of Test Cases}{10}{subsection.5.4}
+\contentsline {subsection}{\numberline {5.5}Customized Instructions}{10}{subsection.5.5}

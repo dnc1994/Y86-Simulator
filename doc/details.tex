@@ -1,0 +1,95 @@
+%This file contains the LaTeX code of my Y86 Simulator report for my ICS course.
+%Author: 章凌豪/Zhang Linghao <zlhdnc1994@gmail.com>
+
+\section{Details}
+
+本节将对模拟器的各个部件的具体实现细节进行详述，对于没有提及的细节请查看代码中的注释。
+
+\subsection{Kernel}
+
+在{\bf js/kernel.js}中，我实现了{\bf window.VM}对象，它包括{\bf 内存、缓存、两组寄存器}，以及整个模拟器的核心——{\bf CPU}。
+
+首先我用大量闭包实现和封装了一个ALU，以供CPU调用。
+
+在实现CPU时，我创建了两个对象$input$和$output$，分别用于表示当前周期始流水线寄存器的状态以及当前周期末流水线寄存器的状态。在$fetch$、$decode$、$execute$、$memory$和$write\_back$五个阶段，主要的工作就是{\bf 实现流水线内部的数值传递以及读写内存}。而在$pipeline\_control\_logic$阶段，我主要参考了课本提供的HCL代码，实现了$F\_stall$、$D\_stall$、$D\_bubble$、$E\_bubble$和$M\_bubble$五种流水线控制机制，并对应地修改了流水线寄存的数值，最后将output作为新的input保存。
+
+最后在$CPU.tick()$中模拟了一个周期内CPU进行的操作。再加上一些用于获取内部信息的接口，CPU对象也封装完毕了。
+
+\subsection{Memory}
+
+内存使用JavaScript内建的{\bf Int8Array}实现。在内存中数据以{\bf Little Endian}格式存储；与外部交互时数据以{\bf Big Endian}格式传输。
+
+为了{\bf 有效管理不连续的内存}，我使用了{\bf 分页技术}。在具体实现中，每个Block为$64K$，默认最多分配$1024$个Block，即最多分配$64M$内存。对于一个$32$位的地址$addr$，令$highAddr = addr >> 16$，$lowAddr = addr \& 0xFFFF$，然后建立一个$highAddr$与Block之间的映射$mapping$，从而对$addr$对应的内存进行操作就映射到了对$Blocks[mapping[highAddr]][lowAddr]$进行操作。这样做可以有效处理栈指针减过$0$从而下溢出后带来的数组范围过大问题。
+
+在分配一个新Block时，我选择将内存初始化成$0xCC$，这样做的灵感来自于{\bf x86指令用$0xCC$来表示调试中断}，既方便了对非法指令地址的处理，也更直观地区分了未写过的内存和值为$0$的内存。
+
+另外我还实现了一系列对内存进行读写的接口，以满足不同的需求。
+
+\subsection{Cache}
+
+为了模拟缓存机制，我在模拟器中实现了一个{\bf L1 Cache}的简化版。对内存进行读写操作时，都要先访问缓存。若缓存未命中，则再访问内存，同时将读取或写入的值重新写入到缓存中。
+
+缓存的参数设定为$S = 2, E = 2, B = 64, m = 32$，即缓存中包含两个Set，每个Set包含两条Line，每条Line包含两个Block，每个Block可以存储一个$32$位的数字。数据的读写都以一个Word（$32$位）为单位。这与现代处理器的L1 Cache相比是很大的简化，但就{\bf 说明缓存的概念和机制}而言是足够的。
+
+每条Line有$Valid$位表示是否写有数据，有$Dirty$位表示数据在写入Cache之后是否被修改过，有$countVisit$位记录被访问次数。
+
+缓存策略如下：
+
+\begin{itemize}
+\item {\bf 选取策略：} 由于数据的读写以$32$位为单位，所以两个相邻地址之间差为$4$，因此取$index$为地址的低第$4$位，$offset$为地址的低第$3$位，这样可以较好地利用{\bf Spatial Locality}。
+\item {\bf 抛弃策略：} 当两条Line的$Valid$位都为$1$时而又需要写入新数据时，选择访问次数少的一条Line写回内存。这样可以较好地利用{\bf Temporal Locality}。
+\item {\bf 写回策略：} 当一条Line的$Dirty$位为$1$，即数据被修改过时，才将其写回内存。
+\end{itemize}
+
+实现缓存之后，所有读写内存的接口函数都要改为访问缓存，只保留$readWord$和$writeWord$这两个直接读写内存的接口供处理Cache Miss时调用。
+
+\subsection{Assembler}
+
+为了方便测试用例的编写，我实现了一个Y86汇编器，在载入.ys文件后能将其汇编为.yo文件，再作为输入交由模拟器来运行。
+
+具体的实现借鉴了一些{\bf 编译原理}中的做法，大致步骤如下：
+
+\begin{itemize}
+\item 格式化输入文件，用正则表达式去除备注和多余空格。
+\item 扫描并记录所有的{\bf symbol}，同时处理{\bf directives}，包括.pos、.align和.long。其中对于.pos和.align要重新计算指令偏移量。
+\item 再次扫描输入，对于每一条汇编指令数据，先根据定义好的语法格式提取它的参数并进行编码（必要时查阅symbol table），再根据相应的格式拼接成目标码。
+\item 拼接结果，或是处理catch到的异常。
+\end{itemize}
+
+为了降低耦合，我把Y86汇编代码的语法以及从汇编指令到目标码的转换函数分别封装在了$insSyntax$和$insEncoder$中，这样也方便添加对自定义指令的支持。
+
+\subsection{Disassembler}
+
+作为实现Y86汇编器的后继，我又尝试实现了一个不是特别完善的Y86反汇编器。它能将载入的.yo文件反汇编成.ys文件，但{\bf 不能区分指令和数据}。反汇编失败的部分会在结果中注明。
+
+实现步骤与汇编器类似，如下：
+
+\begin{itemize}
+\item 格式化输入文件。
+\item 扫描输入并尝试转换每一行目标码为汇编指令。其中对于JXX和CALL这两类指令，要将其跳转到的地址加入target table，并在反汇编结果相应的地方插入target。
+\item 拼接结果，处理异常。
+\end{itemize}
+
+类似地，目标码的语法和从目标码到汇编指令的转换函数分别封装在$codeSyntax$和$insDecoder$中，方便修改和添加。
+
+\subsection{Web UI}
+
+由于对CPU、内存以及缓存做了很好的封装，实现界面时就轻松多了。我采用了比较传统的Web App实现思路，在{\bf index.html}中确定了页面布局，并将按钮和输入框等交互元素与{\bf js/controller.js}中实现的诸如开始运行、保存结果、更新显示等控制函数进行了绑定。而在控制函数中只要简单地调用{\bf js/kernel.js}中实现的{\bf window.VM}对象就可以通过各种接口获取所有需要展示出来的状态和数值。网页的样式则是使用了{\bf Bootstrap}，并在{\bf css/simulator.js}中自定义了部分样式。
+
+界面的实现中值得一提的有：
+\begin{itemize}
+\item 将文件拖拽页面中任一位置即可加载，通过{\bf HTML5}的{\bf drag \& drop}实现
+\item 寄存器值发生变化时会触发{\bf 闪烁动画提示}，通过{\bf jQuery}的{\bf animate}实现
+\item 有两个指示\%ebp和\%esp的指针会随着对应寄存器值的改变而{\bf 滑动}，通过{\bf CSS}实现
+\item 支持通过{\bf 键盘快捷键}控制运行状态，通过{\bf jQuery}监听键盘事件实现
+\end{itemize}
+
+\subsection{Performance Analysis}
+
+在程序运行期间，我对Cache Hit和CPI做了统计。
+
+前者比较简单，在Cache的实现中添加一个计数即可。后者在计算时要注意增加计数值的位置。
+
+$count\_mrmovl$、$count\_popl$、$count\_cond_branch$、$count\_ret$的计数是在CPU的{\bf $execute$}阶段进行的，分别对应$E\_icode$ = MRMOVL、POPL、JXX和RET的情况。而$count\_load\_use$和$count\_mispredict$则要在{\bf $pipleline\_control\_logic$}阶段进行，所对应的情况参考了课本上的描述。
+
+最后根据以上数据生成两张对应的表格，并生成一张以周期为横坐标、以CPI值为纵坐标的图。

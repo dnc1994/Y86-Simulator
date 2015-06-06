@@ -1,0 +1,37 @@
+%This file contains the LaTeX code of my Y86 Simulator report for my ICS course.
+%Author: 章凌豪/Zhang Linghao <zlhdnc1994@gmail.com>
+
+\section{Design}
+
+\subsection{Motivation}
+
+本次Project要求实现一个Y86流水线模拟器，这涉及到大量的逻辑和封装，以及对图形界面的需求。最后我使用了Javascript，配合HTML和CSS，开发了一个纯前端的模拟器。这么选择的原因如下：
+
+首先，我能够熟练运用的语言有C和Python，比较熟练的有Java和JavaScript。其中Python和JavaScript这两种{\bf 面向对象的脚本语言}能够给逻辑部分的开发能带来很大便利。
+
+其次，考虑到要为模拟器实现一个图形界面，而且要在界面上显示许多数值和状态。那么采用前后端分离的方式显然是不合适的，因为{\bf 前后端之间交互的数据量很大}，一方面影响性能，另一方面也会带来许多冗余的绑定代码。
+
+基于这两点考虑，我可以采用纯前端Web App的形式，用Javascript实现所有的逻辑和界面；也可以采用Desktop App的形式，用Python配合一个GUI库进行开发。由于我没有Desktop GUI App的开发经验，加上{\bf Javascript的数据表现能力明显更为出色}，所以我最后选择了用JavaScript来完成这次Project。在开发过程中，我也充分利用了JavaScript的{\bf 闭包}和{\bf 匿名函数}等特性，避免了{\bf 命名空间重复和手动管理内存}等琐碎的问题。
+
+\subsection{Features}
+
+最终的版本实现了所有的基本功能：
+\begin{itemize}
+\item 实现了Y86指令集中的所有指令
+\item 实现了流水线控制逻辑
+\item 支持载入和解析.yo文件，并能将每个周期内流水线寄存器的值作为输出保存到文件
+\end{itemize}
+
+在此基础上，我还添加了许多新功能：
+\begin{itemize}
+\item 支持步进、步退、自动运行、暂停等操作，并能以不同频率（最高1000Hz）运行。
+\item 显示内存中的数据并指示当前栈的位置，也可以监视一个指定的内存地址。
+\item 实现了{\bf Y86汇编器和反汇编器}，从而能够接受.ys文件作为输入，也能保存汇编和反汇编的结果。
+\item 内存的实现采用了{\bf 分页技术}。
+\item 模拟实现了一个{\bf L1缓存的简化版}。
+\item 程序运行结束后可以生成{\bf 性能分析}，包括对缓存命中和CPI的统计。
+\item 添加了一条新指令iaddl，并{\bf 归纳了添加指令的步骤}。
+
+具体的实现细节将在第三节中叙述，同时在第五节中会对部分功能进行进一步的讨论。
+
+\end{itemize}
