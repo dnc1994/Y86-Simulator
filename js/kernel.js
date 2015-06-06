@@ -305,7 +305,7 @@
             else if (output.E_srcB == input.W_dstE)
                 output.E_valB = input.W_valE;
             else
-                output.E_valB = VM.R.get(output.E_srcB);
+                output.E_valB = window.VM.R.get(output.E_srcB);
         };
 
         var execute = function () {

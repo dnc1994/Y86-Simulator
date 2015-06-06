@@ -3,6 +3,8 @@
 
 \section{Discussion}
 
+本节将对设计和开发过程中遇到的一些问题、做出的一些取舍，以及目前的实现存在的一些局限性进行讨论。
+
 \subsection{Memory Issues}
 
 分页内存的实现主要是考虑到可能出现栈指针减过$0$从而下溢出的情形。因为我认为这种情况下简单地报错并不合适，所以对地址取了Unsigned。但这又使得地址成为一个很大的值，从而导致数组范围过大，消耗大量内存甚至使浏览器进程崩溃。
@@ -32,3 +34,23 @@
 不过由于在开发过程中{\bf 大量使用闭包、匿名函数、封装和解耦}，代码的可靠性还是很高的，在有可能导致程序崩溃的地方都做了限制，不容易Crash。主要还是需要更复杂的{\bf Hazard Combination}和{\bf Corner Cases}来验证程序的逻辑和交互正确性。
 
 \subsection{Customized Instructions}
+
+在实现模拟器的大部分功能之后，我试着添加了一条新指令IADDL，即将一个寄存器的值加上一个立即数。同时我将为模拟器添加新的自定义指令的步骤归纳如下：
+
+\begin{enumerate}
+\item 分析和列出要添加的新指令在每个阶段需要完成的操作。
+\item 在{\bf js/constants.js}中定义用于代表新指令的常量。
+\item 在{\bf js/kernel.js}中流水线的各个阶段做对应的修改：
+\item $fetch$：将指令加入合法指令列表，并根据需求在抽取$rA:rB$和$valC$时将其添加到判断列表中。
+\item $decode$：在设置$E\_srcA$等一系列流水线寄存器的值时，将指令添加到对应情形的判断列表中。这里主要分为数据运算和移动以及调用栈这两类情形。
+\item $execute$：同理，在设置$ALU.inputA$和$ALU.inputB$时，根据情形添加指令。如果指令涉及运算，不要忘记$setCC$；如果指令可能成为Hazard Cause，不要忘记增加对该指令的计数。
+\item $memory$：判断指令是否要读写内存，并进行相应读写操作。
+\item $write\_back$：不需要做任何修改。
+\item $pipeline_control_logic$：用与课本上类似的方法分析指令可能触发何种Hazard，并将其添加到对应的处理列表中。同样不要忘记增加计数。
+\item 在{\bf js/assembler.js}中的几个常量数组中添加指令对应的条目；在$insSyntax$和$insEncoder$中分别添加指令的语法以及转换函数。由于其他函数与具体指令无关，所以不需要再做修改。以IADDL为例，有$insSyntax['iaddl'] = ['V', 'rB']$和$insEncoder['iaddl'] = 'c08' + this.rB + this.V$。
+\item 在{\bf js/disassembler.js}中做与上述类似的修改。以IADDL为例，有$codeSyntax['iaddl'] = ['rA', 'rB', 'V']$和$insDecoder['iaddl'] = this.ins + ' \$0x' + this.V + ', ' + this.rB$。
+\end{enumerate}
+
+可以看出，在自定义新指令时，只要{\bf 将其每个阶段的操作分析出来}，修改流水线逻辑是很方便的。同时对汇编器和反汇编器的修改也由于{\bf 良好的封装和低耦合}而极为便捷。
+
+由于时间原因，再加上这纯粹是重复性的机械劳动，我没有进一步添加更多的新指令。

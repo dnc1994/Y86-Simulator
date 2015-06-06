@@ -31,6 +31,32 @@
         'c0' : 'iaddl'
     };
 
+    // 目标码对应的语法
+    window.codeSyntax = {};
+
+    codeSyntax['halt'] = [];
+    codeSyntax['nop'] = [];
+    codeSyntax['rrmovl'] = ['rA', 'rB'];
+    codeSyntax['irmovl'] = ['rA', 'rB', 'V'];
+    codeSyntax['rmmovl'] = ['rA', 'rB', 'D'];
+    codeSyntax['mrmovl'] = ['rA', 'rB', 'D'];
+    codeSyntax['addl'] = ['rA', 'rB'];
+    codeSyntax['subl'] = ['rA', 'rB'];
+    codeSyntax['xorl'] = ['rA', 'rB'];
+    codeSyntax['andl'] = ['rA', 'rB'];
+    codeSyntax['jmp'] = ['Dest'];
+    codeSyntax['jle'] = ['Dest'];
+    codeSyntax['jl'] = ['Dest'];
+    codeSyntax['je'] = ['Dest'];
+    codeSyntax['jne'] = ['Dest'];
+    codeSyntax['jge'] = ['Dest'];
+    codeSyntax['jg'] = ['Dest'];
+    codeSyntax['call'] = ['Dest'];
+    codeSyntax['ret'] = [];
+    codeSyntax['pushl'] = ['rA'];
+    codeSyntax['popl'] = ['rA'];
+    codeSyntax['iaddl'] = ['rA', 'rB', 'V'];
+
     window.YODumpError = function(lineNum, msg) {
         this.msg = 'Dump error at Line ' + (lineNum + 1) + msg;
     };
@@ -94,32 +120,6 @@
     insDecoder[12] = function() {
         return this.ins + ' $0x' + padHex(this.V) + ', ' + this.rB;
     };
-
-    // 目标码对应的语法
-    window.codeSyntax = {};
-
-    codeSyntax['halt'] = [];
-    codeSyntax['nop'] = [];
-    codeSyntax['rrmovl'] = ['rA', 'rB'];
-    codeSyntax['irmovl'] = ['rA', 'rB', 'V'];
-    codeSyntax['rmmovl'] = ['rA', 'rB', 'D'];
-    codeSyntax['mrmovl'] = ['rA', 'rB', 'D'];
-    codeSyntax['addl'] = ['rA', 'rB'];
-    codeSyntax['subl'] = ['rA', 'rB'];
-    codeSyntax['xorl'] = ['rA', 'rB'];
-    codeSyntax['andl'] = ['rA', 'rB'];
-    codeSyntax['jmp'] = ['Dest'];
-    codeSyntax['jle'] = ['Dest'];
-    codeSyntax['jl'] = ['Dest'];
-    codeSyntax['je'] = ['Dest'];
-    codeSyntax['jne'] = ['Dest'];
-    codeSyntax['jge'] = ['Dest'];
-    codeSyntax['jg'] = ['Dest'];
-    codeSyntax['call'] = ['Dest'];
-    codeSyntax['ret'] = [];
-    codeSyntax['pushl'] = ['rA'];
-    codeSyntax['popl'] = ['rA'];
-    codeSyntax['iaddl'] = ['rA', 'rB', 'V'];
 
     var getRegName = function(code) {
         if (code < 0 || code > 7) throw new Error('No such register: ' + code);

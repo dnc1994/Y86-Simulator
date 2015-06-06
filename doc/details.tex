@@ -15,6 +15,12 @@
 
 最后在$CPU.tick()$中模拟了一个周期内CPU进行的操作。再加上一些用于获取内部信息的接口，CPU对象也封装完毕了。
 
+一些可能导致部分流水线寄存器的数值与其他实现不同的细节说明：
+\begin{itemize}
+\item 当一条指令没有用到某个流水线寄存器时，该寄存器的数值保持上一周期的状态不变。这不影响流水线逻辑。
+\item 当$E\_icode$不是JXX时，$M\_Bch$的值不影响流水线逻辑，所以我选择对这种情况不加区分，仍然令$M_Bch = alu.getCnd(input.E\_ifun)$。由于大部分指令$ifun$都为$0$，所以$M\_Bch$大部分时间会等于$1$。
+\end{itemize}
+
 \subsection{Memory}
 
 内存使用JavaScript内建的{\bf Int8Array}实现。在内存中数据以{\bf Little Endian}格式存储；与外部交互时数据以{\bf Big Endian}格式传输。
@@ -49,12 +55,12 @@
 
 具体的实现借鉴了一些{\bf 编译原理}中的做法，大致步骤如下：
 
-\begin{itemize}
+\begin{enumerate}
 \item 格式化输入文件，用正则表达式去除备注和多余空格。
 \item 扫描并记录所有的{\bf symbol}，同时处理{\bf directives}，包括.pos、.align和.long。其中对于.pos和.align要重新计算指令偏移量。
 \item 再次扫描输入，对于每一条汇编指令数据，先根据定义好的语法格式提取它的参数并进行编码（必要时查阅symbol table），再根据相应的格式拼接成目标码。
 \item 拼接结果，或是处理catch到的异常。
-\end{itemize}
+\end{enumerate}
 
 为了降低耦合，我把Y86汇编代码的语法以及从汇编指令到目标码的转换函数分别封装在了$insSyntax$和$insEncoder$中，这样也方便添加对自定义指令的支持。
 
@@ -64,17 +70,17 @@
 
 实现步骤与汇编器类似，如下：
 
-\begin{itemize}
+\begin{enumerate}
 \item 格式化输入文件。
 \item 扫描输入并尝试转换每一行目标码为汇编指令。其中对于JXX和CALL这两类指令，要将其跳转到的地址加入target table，并在反汇编结果相应的地方插入target。
 \item 拼接结果，处理异常。
-\end{itemize}
+\end{enumerate}
 
 类似地，目标码的语法和从目标码到汇编指令的转换函数分别封装在$codeSyntax$和$insDecoder$中，方便修改和添加。
 
 \subsection{Web UI}
 
-由于对CPU、内存以及缓存做了很好的封装，实现界面时就轻松多了。我采用了比较传统的Web App实现思路，在{\bf index.html}中确定了页面布局，并将按钮和输入框等交互元素与{\bf js/controller.js}中实现的诸如开始运行、保存结果、更新显示等控制函数进行了绑定。而在控制函数中只要简单地调用{\bf js/kernel.js}中实现的{\bf window.VM}对象就可以通过各种接口获取所有需要展示出来的状态和数值。网页的样式则是使用了{\bf Bootstrap}，并在{\bf css/simulator.js}中自定义了部分样式。
+由于对CPU、内存以及缓存做了很好的封装，实现界面时就轻松多了。我采用了比较传统的Web App实现思路，在{\bf index.html}中确定了页面布局，并将按钮和输入框等交互元素与{\bf js/controller.js}中实现的诸如开始运行、保存结果、更新显示等控制函数进行了绑定。而在控制函数中只要简单地调用{\bf js/kernel.js}中实现的{\bf window.VM}对象就可以通过各种接口获取所有需要展示出来的状态和数值。网页的样式则是使用了{\bf Bootstrap}，并在{\bf css/simulator.css}中自定义了部分样式。
 
 界面的实现中值得一提的有：
 \begin{itemize}
@@ -90,6 +96,6 @@
 
 前者比较简单，在Cache的实现中添加一个计数即可。后者在计算时要注意增加计数值的位置。
 
-$count\_mrmovl$、$count\_popl$、$count\_cond_branch$、$count\_ret$的计数是在CPU的{\bf $execute$}阶段进行的，分别对应$E\_icode$ = MRMOVL、POPL、JXX和RET的情况。而$count\_load\_use$和$count\_mispredict$则要在{\bf $pipleline\_control\_logic$}阶段进行，所对应的情况参考了课本上的描述。
+$count\_mrmovl$、$count\_popl$、$count\_cond\_branch$、$count\_ret$的计数是在CPU的{\bf $execute$}阶段进行的，分别对应$E\_icode$ = MRMOVL、POPL、JXX和RET的情况。而$count\_load\_use$和$count\_mispredict$则要在{\bf $pipleline\_control\_logic$}阶段进行，所对应的情况参考了课本上的描述。
 
 最后根据以上数据生成两张对应的表格，并生成一张以周期为横坐标、以CPI值为纵坐标的图。
