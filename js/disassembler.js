@@ -247,9 +247,8 @@
             }
             // 解码错误
             else {
-                result.push('');
+                //result.push('');
                 errors.push(decodeResult[1]);
-
             }
         }
 

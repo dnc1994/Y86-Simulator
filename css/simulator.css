@@ -4,10 +4,11 @@
  */
 
 html, body {
+    height: 600px;
+    width: 1200px;
+    margin: 0 auto;
+    background: rgb(11, 44, 65) !important;
     font-family: consolas !important;
-    background: lightseagreen;
-	width: 1200px;
-	margin: 0 auto;
 }
 
 .drop_area {
@@ -22,36 +23,39 @@ html, body {
 
 .header {
     height: 30px;
-    line-height: 30px;
     width: 100%;
-    text-align: center;
     margin-top: 20px;
-    margin-bottom: 30px;
-}
-
-.blocks {
-    background-color: transparent;
-	height: 550px;
-	width: 100%;
-	border-top: 0;
-}
-
-.block {
-	height: 550px;
-	width: 120px;
-	float: left;
-    display: inline-block;
+    margin-bottom: 20px;
+    font-family: "Courier New", monospace;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.24);
+    color: white;
 }
 
 .footer {
     height: 30px;
     width: 100%;
-    text-align: center;
     margin-top: 20px;
+    font-family: "Courier New", monospace;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.24);
+    color: white;
 }
 
 #status {
-    color: blue;
+    position: relative;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.24);
+    width: 260px;
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    vertical-align: bottom;
+    text-overflow: ellipsis;
+    text-align: left;
 }
 
 .status_loaded {
@@ -59,9 +63,106 @@ html, body {
     cursor: pointer;
 }
 
+#status-after {
+    position: absolute;
+    top: 25px;
+    padding: 1px 5px;
+    font-size: 12px;
+    display: block;
+    color: #09094E;
+    box-shadow: 0 0 10px, 0 0 0 1px #000;
+    transition: all .3s ease;
+    background: #FFFDC8;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.monitor {
+    height: 90%;
+    width: 1100px;
+    margin: auto;
+    padding: 5px 0;
+    box-sizing: border-box;
+    background-color: white;
+    opacity: .9;
+    border-top: 0;
+    border: 1px solid #929292;
+    box-shadow: 0 2px 6px;
+}
+
+.block {
+    height: 480px;
+    width: 120px;
+    float: left;
+    display: inline-block;
+}
+
+#fetch.block {
+    margin-left: 14px;
+}
+
+.block_title {
+    height: 32px;
+    width: 100%;
+    line-height: 32px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: rgb(0, 141, 0);
+    border-bottom: 1px solid;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.19);
+}
+
+.block_title:hover {
+    background: rgb(0, 141, 0);
+    color: white;
+}
+
+.block_title:hover ~ .entry_block {
+    background: #F0F0F0;
+}
+
+.entry_block {
+    height: 47px;
+    width: 100%;
+    display: block;
+    padding-top: 5px;
+    text-align: center;
+    font-weight: bold;
+    transition: all .3s ease;
+}
+
+.entry_block:hover {
+    background: #F0F0F0;
+}
+
+.entry_title {
+    height: 16px;
+    width: 100%;
+    line-height: 16px;
+    margin-bottom: 3px;
+    font-size: 14px;
+    font-weight: 100;
+    color: black;
+}
+
+.entry_content {
+    width: 100%;
+    height: 16px;
+    line-height: 16px;
+    font-size: 16px;
+    color: rgb(28, 28, 189);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    font-family: "Courier New", monospace;
+}
+
 #mem_monitor {
+    width: 230px;
+}
+
+#mem_list_container {
+    width: 230px;
     overflow-y: scroll;
-    width: 250px;
 }
 
 #mem_list {
@@ -73,46 +174,7 @@ html, body {
     float: left;
 }
 
-.block_title {
-    height: 32px;
-    width: 100%;
-    line-height: 32px;
-    text-align: center;
-    font-weight: bold;
-	font-size: 20px;
-	color: red;
-	margin-bottom: 5px;
-}
-
-.entry_block {
-    height: 40px;
-	width: 100%;
-    text-align: center;
-    font-weight: bold;
-	display: block;
-	border: 0 2px dashed;
-	border-color: red;
-	margin-top: 2px;
-}
-
-.entry_title {
-    height: 16px;
-	width: 100%;
-	line-height: 16px;
-	font-size: 16px;
-	color: black;
-}
-
-.entry_content {
-	width: 100%;
-	height: 16px;
-	line-height: 16px;
-	font-size: 16px;
-	color: blue;
-	font-family: "Courier New", monospace;
-}
-
-.Maddr {
+.mem_addr {
     background-color: lightgray;
     margin-right: 10px;
 }
@@ -129,12 +191,12 @@ html, body {
 }
 
 #ebp_ptr {
-    left: 130px;
+    left: 115px;
     color: red;
 }
 
 #esp_ptr {
-    left: 180px;
+    left: 165px;
     color: navy;
 }
 
@@ -144,40 +206,55 @@ html, body {
 
 #code_box {
     position: fixed;
-    height: 100%;
-    width: 100%;
     top: 0;
     left: 0;
+    height: 100%;
+    width: 100%;
     opacity: 0;
     pointer-events: none;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     transition: all .3s ease;
     z-index: 1;
 }
 
-#code_box_title {
+#code_box_title, #perf_box_title {
     height: 30px;
+    font-weight: bold;
     text-align: center;
+    font-size: 22px;
+    line-height: 18px;
+    color: rgb(23, 48, 150);
 }
 
 #code_box_title button {
     float: right;
+    margin-left: 10px;
+    font-size: 15px;
 }
 
-#code_box_content {
+#code_box_content, #perf_box_content {
     position: absolute;
     top: 5%;
     left: 10%;
     width: 80%;
     height: 80%;
+    padding: 10px;
     transition: all .3s ease;
-    background-color: #ffffff;
+    background-color: #FFFFFF;
+    box-shadow: 0 5px 20px;
+    border: 1px solid #686868;
+}
+
+#perf_box_content {
+    overflow: scroll;
 }
 
 #code_box_content ol {
     height: calc(100% - 30px);
     width: 50%;
     overflow: scroll;
+    background: #F8F8F8;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
 }
 
 #code_box_content ol:first-of-type {
@@ -193,6 +270,12 @@ html, body {
     margin: 0;
 }
 
+#code_box_content li:hover {
+    background: #E7E7E7;
+    font-weight: bold;
+    color: rgb(0, 0, 131);
+}
+
 #code_box.show {
     opacity: 1;
     pointer-events: all;
@@ -204,36 +287,20 @@ html, body {
 
 #perf_box {
     position: fixed;
-    height: 100%;
-    width: 100%;
     top: 0;
     left: 0;
+    height: 100%;
+    width: 100%;
     opacity: 0;
     pointer-events: none;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     transition: all .3s ease;
     z-index: 1;
 }
 
-#perf_box_content {
-    position: absolute;
-    top: 5%;
-    left: 10%;
-    width: 80%;
-    height: 90%;
-    transition: all .3s ease;
-    background-color: #ffffff;
-    overflow: scroll;
-    text-align: center;
-}
-
-#perf_box_title {
-    height: 30px;
-    text-align: center;
-}
-
 #perf_box_title button {
     float:right;
+    font-size: 15px;
 }
 
 #perf_table {
@@ -241,15 +308,26 @@ html, body {
 }
 
 #perf_hazard_table #perf_cache_table #perf_canvas {
-    display: inline-block;
     position:absolute;
-    margin-top: 10px;
     left: 5%;
+    margin-top: 10px;
+    display: inline-block;
 }
 
 #perf_box.show {
     opacity: 1;
     pointer-events: all;
+}
+
+div#perf_cache_table {
+    display: inline-block;
+    margin: 0 20px;
+}
+
+div#perf_hazard_table {
+    display: inline-block;
+    margin: 0 20px;
+    vertical-align: top;
 }
 
 .tg {
@@ -287,11 +365,42 @@ html, body {
     background-color:#ffffff;
 }
 
-.tg .tg-vyw9{
-    font-family:"Courier New", Courier, monospace !important;
-}
-
 .tg .tg-vc88{
     font-weight:bold;
-    font-family:"Courier New", Courier, monospace !important;
+    font-family:"Courier New", monospace !important;
+    text-align: center;
+}
+
+.tg .tg-vyw9{
+    font-family:"Courier New", monospace !important;
+}
+
+input {
+    border: 1px solid #8B8B8B;
+    box-shadow: 0 1px 9px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.39);
+    transition: all .3s ease;
+    text-align: center;
+}
+
+input:focus, input:active {
+    box-shadow: 0 1px 9px rgba(0, 0, 0, 0.11), 0 1px 1px rgba(0, 0, 0, 0.46);
+    outline-color: aqua;
+}
+
+button {
+    -webkit-appearance: none;
+    background: linear-gradient(to bottom, white 0%, rgb(236, 236, 236));
+    border: 1px solid #8B8B8B;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.26);
+    box-shadow: 0 1px 9px rgba(0, 0, 0, 0.08), 0 1px 1px rgba(0, 0, 0, 0.39);
+    transition: all .3s ease;
+}
+
+button:hover {
+    box-shadow: 0 1px 9px rgba(0, 0, 0, 0.11), 0 1px 1px rgba(0, 0, 0, 0.46), 0 2px 3px rgba(0, 0, 0, 0.26) inset, 0 0 1000px rgba(0, 0, 0, 0.1) inset;
+}
+
+.glyphicon {
+    vertical-align: middle;
+    top: 0 !important;
 }

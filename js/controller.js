@@ -68,7 +68,11 @@
 
         window.YOLoaded = true;
         window.maxMemListAddr = -4;
-        $('#status').addClass('status_loaded');
+        $('#status').addClass('status_loaded').mouseenter(function () {
+            $('#status-after').html(this.innerText).css('opacity', 1);
+        }).mouseleave(function () {
+            $('#status-after').css('opacity', 0);
+        });
         $('#save_filename').val(fileName.slice(0, -3));
         $('#mem_list').html('<div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div><div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>');
 
@@ -83,7 +87,7 @@
                 YODump(YOData);
                 // 渲染代码窗口并添加保存按钮
                 renderCode(DumpData);
-                $('#code_box_title p').append($('<button id="code_box_save_dump">Save .dump file</button>'))
+                $('#code_box_title p').append($('<button id="code_box_save_dump"><i class="glyphicon glyphicon-floppy-disk"></i> Save .dump file</button>'))
             }
             preRun();
         }
@@ -306,8 +310,8 @@
                 var val = toLittleEndian(padHex(VM.M.readUnsignedThrough(addr)));
                 var addrID = 'memaddr_' + addr.toString();
                 var valID = 'memval_' + addr.toString();
-                var addrStr = '<span id=' + addrID + ' class="Maddr">' + padHex(addr, 4) + '</span>';
-                var valStr = '<span id=' + valID + ' class="Mval">' + val + '</span>';
+                var addrStr = '<span id=' + addrID + ' class="mem_addr">' + padHex(addr, 4) + '</span>';
+                var valStr = '<span id=' + valID + ' class="mem_val">' + val + '</span>';
                 $('#mem_list').append($('<div>' + addrStr + valStr + '</div>'));
             }
         }
@@ -321,9 +325,9 @@
         $('#ebp_ptr').css('top', $(ebp)[0].offsetTop + 'px');
         $('#esp_ptr').css('top', $(esp)[0].offsetTop + 'px');
         // 滚动动画
-        $('#mem_monitor').finish();
-        $('#mem_monitor').animate({
-            scrollTop: $(ebp)[0].offsetTop - 250
+        $('#mem_list_container').finish();
+        $('#mem_list_container').animate({
+            scrollTop: $(esp)[0].offsetTop - 250
         }, 300);
     };
 
@@ -335,7 +339,7 @@
                 {
                     fillColor : "rgba(220,220,220,0.5)",
                     strokeColor : "rgba(220,220,220,1)",
-                    pointColor : "rgba(220,220,220,1)",
+                    pointColor : "rgba(20,20,20,0.5)",
                     pointStrokeColor : "#fff",
                     data : window.CPIvalues
                 }

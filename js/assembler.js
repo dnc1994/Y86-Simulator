@@ -241,8 +241,6 @@
 
         if (typeof needPreRun == 'undefined') needPreRun = false;
 
-        window.YSLoaded = false;
-        window.YOLoaded = false;
         window.YSData = data;
         window.YOData = '';
         window.YSName = filename;
@@ -375,7 +373,7 @@
         window.YSLoaded = true;
         // 渲染代码窗口并添加保存按钮
         renderCode(YSData);
-        $('#code_box_title p').append($('<button id="code_box_save_yo">Save .yo file</button>'))
+        $('#code_box_title p').append($('<button id="code_box_save_yo"><i class="glyphicon glyphicon-floppy-disk"></i> Save .yo file</button>'))
 
         // 汇编结束, 调用 YOLoader 载入汇编得到的 YO 文件
         YOLoader(result.join('\n'), YSName.replace('.ys', '.yo'), true, needPreRun);

@@ -35,7 +35,7 @@
 
         <div id="perf_box">
             <div id="perf_box_content">
-                <div id="perf_box_title"><p>Performance Analysis<button id="perf_box_close">Close</button></p></div>
+                <div id="perf_box_title"><p>Performance Analysis<button id="perf_box_close"><span class="glyphicon glyphicon-remove"></span></button></p></div>
                 <div id="perf_table">
                     <div id="perf_cache_table" width="400" height="200"></div>
                     <div id="perf_hazard_table" width="400" height="200"></div>
@@ -48,16 +48,17 @@
 
         <div id="top_bar" class="header">
             <span id="status">Nothing Loaded.</span>
-            <button id="prev">Prev</button>
-            <button id="pause">Pause</button>
-            <button id="start">Start</button>
-            <button id="next">Next</button>
-            <button id="reset">Reset</button>
+            <span id="status-after"></span>
+            <button id="prev"><span class="glyphicon glyphicon-backward"></span></button>
+            <button id="pause"><span class="glyphicon glyphicon-pause"></span></button>
+            <button id="start"><span class="glyphicon glyphicon-play"></span></button>
+            <button id="next"><span class="glyphicon glyphicon-forward"></span></button>
+            <button id="reset"><span class="glyphicon glyphicon-refresh"></span></button>
             Frequency: <input type="text" maxlength="3" id="freq" size="5" value="50" /> Hz
             <input type="text" maxlength="10" placeholder="Mem Addr" id="mem_addr" size="15" />
         </div>
 
-        <div id="monitor" class="blocks">
+        <div id="monitor" class="monitor">
             <div id="fetch" class="block fetch">
                 <div id="fetch_title" class="block_title">Fetch</div>
                 <div class="entry_block">
@@ -281,17 +282,19 @@
             </div>
             <div id="mem_monitor" class="block mem_monitor">
                 <div id="mem_monitor_title" class="block_title">Memory</div>
-                <div id="mem_list" class="mem_block">
-                    <div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div>
-                    <div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>
+                <div id="mem_list_container" class="block mem_list_container">
+                    <div id="mem_list" class="mem_block">
+                        <div id="ebp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> EBP</div>
+                        <div id="esp_ptr" class="stack_ptr"><span class="glyphicon glyphicon-arrow-left"></span> ESP</div>
+                 </div>
                 </div>
             </div>
         </div>
 
         <div id="bottom_bar" class="footer">
             Filename: <input type="text" id="save_filename" placeholder="filename" style="width: 100px" />.txt
-            <button id="save">Save</button>
-            <button id="perf">Perf Analysis</button>
+            <button id="save"><span class="glyphicon glyphicon-floppy-disk"></span> Save Result</button>
+            <button id="perf"><span class="glyphicon glyphicon-stats"></span> Perf Analysis</button>
         </div>
 
         <div id="none_ptr">Now you see me? Soon you won't</div>
@@ -336,8 +339,9 @@
 
                             reader.onloadend = function(event) {
                                 if (event.target.readyState == FileReader.DONE) {
+                                    window.YOLoaded = window.YSLoaded = false;
                                     // 创建代码窗口
-                                    $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler &amp Disassembler<button id="code_box_close">Close</button></p></div>');
+                                    $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler &amp Disassembler<button id="code_box_close"><span class="glyphicon glyphicon-remove"></span></button></p></div>');
                                     if (fHandle.name.slice(-3) == '.yo')
                                         YOLoader(event.target.result, fHandle.name, true, true);
                                     else if (fHandle.name.slice(-3) == '.ys')
@@ -428,12 +432,19 @@
 
             // 保存运行结果
             $('#save').click(function() {
+                if (!window.YOLoaded) {
+                    alert('Nothing loaded :(');
+                    return;
+                }
                 saveResult(runResult, ($('#save_filename').val()) + ".txt");
             });
 
             // 显示代码窗口
             $('body').on('click', '#status', function () {
-                if (!window.YOLoaded) return;
+                if (!window.YOLoaded) {
+                    alert('Nothing loaded :(');
+                    return;
+                }
                 $('#code_box').addClass('show');
             });
 
@@ -454,6 +465,10 @@
 
             // 生成性能分析
             $('#perf').click(function(){
+                if (!window.YOLoaded) {
+                    alert('Nothing loaded :(');
+                    return;
+                }
                 if (VM.CPU.getCycle() != window.maxCycle) {
                     alert('Please first run through the end before viewing performance analysis!');
                     return;
