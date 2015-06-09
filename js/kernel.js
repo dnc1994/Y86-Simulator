@@ -468,6 +468,9 @@
                 newInput.F_predPC = input.F_predPC;
             }
 
+            if (M_bubble || E_bubble || D_stall || D_bubble || F_stall)
+                APlay('caoniba');
+
             // 保存新一个周期的流水线寄存器状态
             input = newInput;
         };

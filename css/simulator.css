@@ -129,7 +129,6 @@ html, body {
     padding-top: 5px;
     text-align: center;
     font-weight: bold;
-    transition: all .3s ease;
 }
 
 .entry_block:hover {

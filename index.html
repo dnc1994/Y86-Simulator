@@ -339,6 +339,7 @@
 
                             reader.onloadend = function(event) {
                                 if (event.target.readyState == FileReader.DONE) {
+                                    APlay('wolai');
                                     window.YOLoaded = window.YSLoaded = false;
                                     // 创建代码窗口
                                     $('#code_box_content').html('<div id="code_box_title"><p>Y86 Assembler &amp Disassembler<button id="code_box_close"><span class="glyphicon glyphicon-remove"></span></button></p></div>');
@@ -378,6 +379,7 @@
                 }
                 catch (e) {
                     //console.log('Cache STAT', VM.C.countCacheHit, VM.C.countCacheMiss);
+                    APlay('meiguoshengdiyage');
                     window.alert("VM terminated by signal " + getStatName(e));
                     return false;
                 }

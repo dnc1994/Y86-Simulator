@@ -97,6 +97,8 @@
 
     // 预先获取运行结果, 提高体验
     window.preRun = function() {
+        window.mute = true;
+
         var result = '';
         var nCycle = 0;
 
@@ -142,6 +144,12 @@
             result += '\tW_dstE   \t= ' + toHexString(state.W_dstE, 0) + '\n';
             result += '\tW_dstM   \t= ' + toHexString(state.W_dstM, 0) + '\n\n';
 
+            /*
+            result += '\tZF\t= ' + VM.CPU.getZF() + '\n';
+            result += '\tSF\t= ' + VM.CPU.getSF() + '\n';
+            result += '\tOF\t= ' + VM.CPU.getOF() + '\n';
+            */
+
             try {
                 VM.CPU.tick();
                 window.maxCycle = ++ nCycle;
@@ -153,6 +161,7 @@
 
         window.runResult = result;
 
+        window.mute = false;
         window.YOReload(false);
     };
 
@@ -281,7 +290,7 @@
                 $Node.parent().finish();
                 var curColor = $Node.parent().css("background-color");
                 $Node.parent().css("background-color", "#88FF88").animate({backgroundColor: curColor}, 500);
-                //APlay('biu.mp3');
+                APlay('biu');
             }
         }
 
@@ -364,13 +373,19 @@
 
     };
 
-    /*
-    window.APlay = function(filename, mute){
-        if (typeof mute === 'undefined') mute = 0;
-        if (mute) return;
-        var audio = new Audio('audio/' + filename);
-        audio.play();
+
+    window.AudioList = [];
+
+    window.AudioList['biu'] = new Audio('audio/biu.mp3');
+    window.AudioList['wolai'] = new Audio('audio/wolai.mp3');
+    window.AudioList['caoniba'] = new Audio('audio/caoniba.mp3');
+    window.AudioList['meiguoshengdiyage'] = new Audio('audio/meiguoshengdiyage.mp3');
+
+    window.mute = false;
+
+    window.APlay = function(name){
+        if (window.mute) return;
+        window.AudioList[name].play();
     };
-    */
 
 })();
