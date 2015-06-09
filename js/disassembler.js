@@ -157,7 +157,7 @@
                 else
                     result[item] = 'target' + targetNo;
                 pos += 8;
-                console.log('Dest target', result[item], targetCount);
+                //console.log('Dest target', result[item], targetCount);
             }
             else
                 throw new Error('No such syntax: ' + item);
@@ -224,7 +224,7 @@
         var line;
 
         for (var i = 0; i < lines.length; ++ i) {
-            console.log('processing', lines[i]);
+            //console.log('processing', lines[i]);
 
             line = lines[i];
             if (line == '') {

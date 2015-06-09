@@ -381,10 +381,9 @@
     window.AudioList['caoniba'] = new Audio('audio/caoniba.mp3');
     window.AudioList['meiguoshengdiyage'] = new Audio('audio/meiguoshengdiyage.mp3');
 
-    window.mute = false;
-
     window.APlay = function(name){
-        if (window.mute) return;
+        var muted = $('#muted')[0].checked;
+        if (muted) return;
         window.AudioList[name].play();
     };
 

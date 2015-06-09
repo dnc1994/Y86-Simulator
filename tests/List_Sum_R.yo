@@ -1,0 +1,45 @@
+  0x0000: 308400020000 | irmovl Stack, %esp
+  0x0006: 308500020000 | irmovl Stack, %ebp
+  0x000c: 702c000000   | jmp main
+  0x0011:              | .align 4
+  0x0014:              | ele1:
+  0x0014: 0a000000     | .long 0x00a
+  0x0018: 1c000000     | .long ele2
+  0x001c:              | ele2:
+  0x001c: b0000000     | .long 0x0b0
+  0x0020: 24000000     | .long ele3
+  0x0024:              | ele3:
+  0x0024: 000c0000     | .long 0xc00
+  0x0028: 00000000     | .long 0
+  0x002c:              | main:
+  0x002c: 308214000000 | irmovl ele1,%edx
+  0x0032: a028         | pushl %edx
+  0x0034: 803a000000   | call rsum_list
+  0x0039: 10           | halt
+  0x003a:              | rsum_list:
+  0x003a: a058         | pushl %ebp
+  0x003c: 2045         | rrmovl %esp,%ebp
+  0x003e: 308128000000 | irmovl $40,%ecx
+  0x0044: 6114         | subl %ecx,%esp
+  0x0046: 501508000000 | mrmovl 8(%ebp),%ecx
+  0x004c: 6211         | andl %ecx,%ecx
+  0x004e: 745e000000   | jne L6
+  0x0053: 308000000000 | irmovl $0,%eax
+  0x0059: 708f000000   | jmp L7
+  0x005e:              | L6:
+  0x005e: 500508000000 | mrmovl 8(%ebp),%eax
+  0x0064: 500000000000 | mrmovl (%eax),%eax
+  0x006a: 4005f4ffffff | rmmovl %eax,-12(%ebp)
+  0x0070: 500508000000 | mrmovl 8(%ebp),%eax
+  0x0076: 500004000000 | mrmovl 4(%eax),%eax
+  0x007c: 400400000000 | rmmovl %eax,(%esp)
+  0x0082: 803a000000   | call rsum_list
+  0x0087: 5025f4ffffff | mrmovl -12(%ebp),%edx
+  0x008d: 6020         | addl %edx,%eax
+  0x008f:              | L7:
+  0x008f: 2054         | rrmovl %ebp,%esp
+  0x0091: b058         | popl %ebp
+  0x0093: 90           | ret
+  0x0094:              | .pos 0x200
+  0x0200:              | Stack:
+                       | 

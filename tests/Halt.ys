@@ -1,0 +1,3 @@
+irmovl $1,%eax
+halt
+irmovl $1,%ebx

@@ -1,0 +1,7 @@
+irmovl $0xa,%ebx
+irmovl $128,%edx
+irmovl $3,%ecx
+rmmovl %ecx,0(%edx)
+mrmovl 0(%edx),%eax
+addl %ebx,%eax
+halt
