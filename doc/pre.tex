@@ -1,0 +1,146 @@
+\documentclass[12pt]{beamer}
+
+\usetheme{Warsaw}
+
+\usepackage{xeCJK}
+\setCJKmainfont{SimSun}
+
+\usepackage{graphicx}
+
+\usepackage{hyperref}
+\hypersetup{
+	linkcolor=blue,
+	urlcolor=blue,
+}
+
+\linespread{1.15}
+
+\newCJKfontfamily\zhexue{SimSun}	
+
+\begin{document}
+
+	\title[CSAPP]{Y86 Pipeline Simulator}
+	\author{章凌豪}
+	\date{\today}
+
+	\frame{\titlepage}
+	
+	\begin{frame}[allowframebreaks]{Outline}
+		\tableofcontents
+	\end{frame}
+
+	\section{开发环境}
+
+	\frame{
+		\begin{table}[h]
+		\begin{tabular}{ll}
+		{\bf 开发语言}  & JavaScript / HTML / CSS   \\
+		{\bf 浏览器环境} & Chrome / Firefox / Safari \\
+		 & \\
+		 & jQuery                    \\
+		{\bf 第三方库} & Bootstrap                 \\
+		 & FileSaver.js              \\
+		 & Chart.js                 
+		\end{tabular}
+		\end{table}
+	
+	\begin{itemize}[<+-| alert@+>]
+		\item 不适合前后端分离
+		\item 配合HTML和CSS，数据表现能力出色
+		\item 人生苦短，我用脚本语言
+	\end{itemize}
+	}
+	
+	\section{实现功能}
+	
+	\frame{
+		\frametitle{基本功能}
+		\begin{itemize}[<+-| alert@+>]
+		\item 实现了Y86指令集中的所有指令。
+		\item 实现了流水线控制逻辑。
+		\item 支持载入和解析.yo文件，并能将每个周期内流水线寄存器的数值作为输出保存到文件。
+		\end{itemize}
+	}
+	
+	\frame{
+		\frametitle{扩展功能}
+		\begin{itemize}[<+-| alert@+>]
+		\item 支持步进、步退、自动运行、暂停等操作，并能以不同频率（最高1000Hz）运行。
+		\item 显示内存中的数据并指示当前栈的位置，也可以监视一个指定的内存地址。
+		\item 实现了{\bf Y86汇编器和反汇编器}，从而能够接受.ys文件作为输入，也能保存汇编和反汇编的结果。
+		\item 内存的实现采用了{\bf 分页技术}。
+		\item 模拟实现了一个{\bf L1缓存的简化版}。
+		\item 程序运行结束后可以生成{\bf 性能分析}，包括对缓存命中和CPI的统计。
+		\item 添加了一条新指令iaddl，并{\bf 归纳了添加指令的步骤}。
+		\end{itemize}
+	}
+	
+	\section{实现细节}
+	
+	\subsection{内核}
+	
+	\frame{
+		\frametitle{内核}
+		\begin{itemize}[<+-| alert@+>]
+		\item 封装ALU、CPU，提供清晰的接口
+		\item 数值传递、检查条件、读写内存
+		\item 对照HCL实现流水线控制逻辑
+		\item 编写测试用例来检查正确性
+		\end{itemize}
+	}
+	
+	\subsection{内存}
+	
+	\frame{
+		\frametitle{内存}
+		\begin{itemize}[<+-| alert@+>]
+		\item Int8Array
+		\item 使用分页技术
+		\item 内存初始化为0xCC
+		\item 多类型接口
+		\end{itemize}
+	}
+	
+	\subsection{缓存}
+	
+	\frame{
+		\frametitle{缓存}
+		\begin{itemize}[<+-| alert@+>]
+		\item 模拟实现了一个{\bf L1 Cache}的简化版，$S = 2, E = 2, B = 64, m = 32$。
+		\item {\bf 选取策略：} 由于数据的读写以$32$位为单位，所以两个相邻地址之间差为$4$，因此取$index$为地址的低第$4$位，$offset$为地址的低第$3$位，这样可以较好地利用{\bf Spatial Locality}。
+		\item {\bf 抛弃策略：} 当两条Line的$Valid$位都为$1$时而又需要写入新数据时，选择访问次数少的一条Line写回内存。这样可以较好地利用{\bf Temporal Locality}。
+		\item {\bf 写回策略：} 当一条Line的$Dirty$位为$1$，即数据被修改过时，才将其写回内存。
+		\end{itemize}
+	}
+	
+	\subsection{汇编\&反汇编}
+	
+	\frame{
+		\frametitle{汇编\&反汇编}
+		\begin{itemize}[<+-| alert@+>]
+		\item 正则、转换、拼接
+		\item 良好的封装、低耦合
+		\item 方便添加新指令
+		\end{itemize}
+	}
+	
+	\section{测试用例}
+	
+	\frame{
+		\frametitle{测试用例}
+		\begin{table}[h]
+		\begin{tabular}{|l|l|}
+		\hline
+		{\bf \#} & {\bf 描述}										\\ \hline
+		1	& 测试样例，包括.long、循环和调用						\\ \hline
+		2	& 测试模拟器是否能能正确结束运行						\\ \hline
+		3	& 测试模拟器是否能处理Forward优先级					\\ \hline
+		4	& 测试模拟器是否能处理Load/Use Hazard					\\ \hline
+		5	& 测试模拟器是否能处理Combination A						\\ \hline
+		6	& 对链表中的三个元素进行求和，测试内存取值相关操作		\\ \hline
+		7	& 同上，但用递归完成，测试调用和返回等操作				\\ \hline
+		\end{tabular}
+		\end{table}
+	}
+	
+\end{document}
